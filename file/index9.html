@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نقشه تعاملی شیراز - ترسیم و آپلود KML</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/terraformer/1.0.9/terraformer.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/terraformer-wkt-parser/1.2.1/terraformer-wkt-parser.min.js"></script>
+    <style>
+        :root {
+            --primary-blue: #1a73e8;
+            --light-blue: #e3f2fd;
+            --dark-blue: #0d47a1;
+            --green: #2ecc71;
+            --orange: #f39c12;
+            --red: #e74c3c;
+            --bg-color: #f0f4f8;
+            --card-bg: white;
+            --text-color: #333;
+            --header-bg: linear-gradient(to right, var(--dark-blue), var(--primary-blue));
+            --info-bg: var(--light-blue);
+            --area-bg: #e8f5e9;
+            --coordinates-bg: #fff3e0;
+            --shadow-color: rgba(0, 0, 0, 0.2);
+        }
+
+        .dark-theme {
+            --primary-blue: #64b5f6;
+            --light-blue: #0d47a1;
+            --dark-blue: #bbdefb;
+            --green: #4caf50;
+            --orange: #ff9800;
+            --red: #f44336;
+            --bg-color: #121212;
+            --card-bg: #2d2d2d;
+            --text-color: #e0e0e0;
+            --header-bg: linear-gradient(to right, #0d47a1, #1565c0);
+            --info-bg: #1a237e;
+            --area-bg: #1b5e20;
+            --coordinates-bg: #e65100;
+            --shadow-color: rgba(0, 0, 0, 0.5);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Tahoma', Arial, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, var(--bg-color) 0%, var(--card-bg) 100%);
+            color: var(--text-color);
+            direction: rtl;
+            min-height: 100vh;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 20px;
+        }
+        
+        header {
+            background: var(--header-bg);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            grid-column: 1 / -1;
+            box-shadow: 0 5px 15px var(--shadow-color);
+            text-align: center;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+        
+        h1 i {
+            font-size: 2.2rem;
+            color: var(--light-blue);
+        }
+        
+        .subtitle {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+        
+        .theme-toggle {
+            position: absolute;
+            left: 20px;
+            top: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+        
+        .theme-toggle:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .map-container {
+            height: 700px;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px var(--shadow-color);
+            position: relative;
+        }
+        
+        #map {
+            height: 100%;
+            width: 100%;
+        }
+        
+        .controls-panel {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px var(--shadow-color);
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            transition: all 0.3s ease;
+        }
+        
+        .control-section {
+            border-bottom: 1px solid var(--info-bg);
+            padding-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .control-section:last-child {
+            border-bottom: none;
+        }
+        
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--dark-blue);
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+        }
+        
+        .section-title i {
+            color: var(--primary-blue);
+        }
+        
+        .btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 12px 20px;
+            background: linear-gradient(to right, var(--primary-blue), var(--dark-blue));
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 10px var(--shadow-color);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(to right, var(--green), #27ae60);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(to right, var(--red), #c0392b);
+        }
+        
+        .file-upload {
+            position: relative;
+            margin-bottom: 15px;
+        }
+        
+        .file-upload input {
+            display: none;
+        }
+        
+        .file-upload-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 12px 20px;
+            background: var(--info-bg);
+            color: var(--dark-blue);
+            border: 2px dashed var(--primary-blue);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        
+        .file-upload-label:hover {
+            background: var(--light-blue);
+        }
+        
+        .info-box {
+            background: var(--info-bg);
+            padding: 15px;
+            border-radius: 10px;
+            border-right: 5px solid var(--primary-blue);
+            margin-top: 15px;
+            transition: all 0.3s ease;
+        }
+        
+        .info-title {
+            font-weight: bold;
+            color: var(--dark-blue);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .area-display {
+            background: var(--area-bg);
+            padding: 15px;
+            border-radius: 10px;
+            border-right: 5px solid var(--green);
+            margin-top: 15px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .area-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--dark-blue);
+            margin: 10px 0;
+            transition: all 0.3s ease;
+        }
+        
+        .coordinates-display {
+            background: var(--coordinates-bg);
+            padding: 15px;
+            border-radius: 10px;
+            border-right: 5px solid var(--orange);
+            margin-top: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+            transition: all 0.3s ease;
+        }
+        
+        .coordinates-title {
+            font-weight: bold;
+            color: var(--dark-blue);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .coordinate-item {
+            padding: 5px 0;
+            border-bottom: 1px dashed var(--info-bg);
+            font-family: monospace;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+        
+        .legend {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+        
+        .legend-draw {
+            background: var(--primary-blue);
+        }
+        
+        .legend-kml {
+            background: var(--green);
+        }
+        
+        @media (max-width: 1024px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+            
+            .controls-panel {
+                order: -1;
+            }
+            
+            .theme-toggle {
+                position: relative;
+                left: auto;
+                top: auto;
+                margin-bottom: 15px;
+            }
+        }
+        
+        .map-overlay {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: var(--card-bg);
+            padding: 10px 15px;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px var(--shadow-color);
+            z-index: 1000;
+            font-weight: bold;
+            color: var(--dark-blue);
+            transition: all 0.3s ease;
+        }
+        
+        .kml-info {
+            background: var(--area-bg);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            display: none;
+            transition: all 0.3s ease;
+        }
+        
+        .kml-layer-count {
+            font-weight: bold;
+            color: var(--dark-blue);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <button class="theme-toggle" id="themeToggle">
+                <i class="fas fa-moon"></i> تم تاریک
+            </button>
+            <h1><i class="fas fa-map-marked-alt"></i> نقشه تعاملی شیراز</h1>
+            <p class="subtitle">ترسیم محدوده دلخواه و آپلود فایل KML</p>
+        </header>
+        
+        <div class="map-container">
+            <div class="map-overlay">
+                <i class="fas fa-map-marker-alt"></i> شیراز، ایران
+            </div>
+            <div id="map"></div>
+        </div>
+        
+        <div class="controls-panel">
+            <div class="control-section">
+                <h2 class="section-title"><i class="fas fa-draw-polygon"></i> ابزارهای ترسیم</h2>
+                <button id="drawPolygon" class="btn">
+                    <i class="fas fa-draw-polygon"></i> ترسیم چندضلعی
+                </button>
+                <button id="drawRectangle" class="btn">
+                    <i class="fas fa-vector-square"></i> ترسیم مستطیل
+                </button>
+                <button id="drawCircle" class="btn">
+                    <i class="fas fa-circle"></i> ترسیم دایره
+                </button>
+                <button id="clearAll" class="btn btn-danger">
+                    <i class="fas fa-trash-alt"></i> پاک کردن همه
+                </button>
+                
+                <div class="area-display">
+                    <div class="info-title">
+                        <i class="fas fa-ruler-combined"></i> مساحت محاسبه شده
+                    </div>
+                    <div class="area-value" id="areaValue">0 مترمربع</div>
+                    <div id="areaHectares">0 هکتار</div>
+                </div>
+            </div>
+            
+            <div class="control-section">
+                <h2 class="section-title"><i class="fas fa-file-upload"></i> آپلود فایل KML</h2>
+                <div class="file-upload">
+                    <input type="file" id="kmlFile" accept=".kml">
+                    <label for="kmlFile" class="file-upload-label">
+                        <i class="fas fa-cloud-upload-alt"></i> انتخاب فایل KML
+                    </label>
+                </div>
+                <button id="clearKml" class="btn btn-danger">
+                    <i class="fas fa-times-circle"></i> حذف لایه KML
+                </button>
+                
+                <div class="kml-info" id="kmlInfo">
+                    <div class="info-title">
+                        <i class="fas fa-info-circle"></i> اطلاعات فایل KML
+                    </div>
+                    <p>تعداد لایه‌های KML: <span class="kml-layer-count" id="kmlLayerCount">0</span></p>
+                </div>
+                
+                <div class="info-box">
+                    <div class="info-title">
+                        <i class="fas fa-info-circle"></i> راهنمای آپلود
+                    </div>
+                    <p>فایل KML باید حاوی داده‌های جغرافیایی معتبر باشد. پس از آپلود، محدوده بر روی نقشه نمایش داده خواهد شد.</p>
+                    <p><strong>توجه:</strong> این سیستم از فایل‌های KML ساده پشتیبانی می‌کند.</p>
+                </div>
+            </div>
+            
+            <div class="control-section">
+                <h2 class="section-title"><i class="fas fa-map-pin"></i> مختصات ترسیم شده</h2>
+                <div class="coordinates-display">
+                    <div class="coordinates-title">
+                        <i class="fas fa-list"></i> نقاط مرزی
+                    </div>
+                    <div id="coordinatesList">هیچ نقطه‌ای ترسیم نشده است</div>
+                </div>
+            </div>
+            
+            <div class="control-section">
+                <h2 class="section-title"><i class="fas fa-key"></i> راهنما</h2>
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color legend-draw"></div>
+                        <span>محدوده ترسیم شده</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color legend-kml"></div>
+                        <span>محدوده KML آپلود شده</span>
+                    </div>
+                </div>
+                
+                <div class="info-box">
+                    <div class="info-title">
+                        <i class="fas fa-lightbulb"></i> نحوه استفاده
+                    </div>
+                    <p>1. برای ترسیم محدوده از ابزارهای ترسیم استفاده کنید.</p>
+                    <p>2. مساحت به طور خودکار محاسبه می‌شود.</p>
+                    <p>3. می‌توانید فایل KML حاوی محدوده مورد نظر را آپلود کنید.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // مختصات مرکز شیراز
+        const shirazCoords = [29.5916, 52.5836];
+        
+        // ایجاد نقشه
+        const map = L.map('map').setView(shirazCoords, 12);
+        
+        // اضافه کردن لایه OpenStreetMap
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+        
+        // گروه‌های لایه
+        const drawnItems = new L.FeatureGroup();
+        map.addLayer(drawnItems);
+        
+        let kmlLayers = [];
+        
+        // کنترل رسم
+        const drawControl = new L.Control.Draw({
+            draw: {
+                polygon: {
+                    allowIntersection: false,
+                    drawError: {
+                        color: '#e74c3c',
+                        message: 'اشکال هندسی نباید همپوشانی داشته باشند'
+                    },
+                    shapeOptions: {
+                        color: '#1a73e8',
+                        fillColor: '#1a73e8',
+                        fillOpacity: 0.2
+                    }
+                },
+                polyline: false,
+                rectangle: {
+                    shapeOptions: {
+                        color: '#1a73e8',
+                        fillColor: '#1a73e8',
+                        fillOpacity: 0.2
+                    }
+                },
+                circle: {
+                    shapeOptions: {
+                        color: '#1a73e8',
+                        fillColor: '#1a73e8',
+                        fillOpacity: 0.2
+                    }
+                },
+                marker: false
+            },
+            edit: {
+                featureGroup: drawnItems
+            }
+        });
+        
+        map.addControl(drawControl);
+        
+        // رویدادهای رسم
+        map.on(L.Draw.Event.CREATED, function (e) {
+            const layer = e.layer;
+            drawnItems.addLayer(layer);
+            
+            // محاسبه مساحت
+            updateArea(layer);
+            
+            // نمایش مختصات
+            updateCoordinates(layer);
+        });
+        
+        // رویداد ویرایش
+        map.on(L.Draw.Event.EDITED, function (e) {
+            const layers = e.layers;
+            layers.eachLayer(function (layer) {
+                updateArea(layer);
+                updateCoordinates(layer);
+            });
+        });
+        
+        // رویداد حذف
+        map.on(L.Draw.Event.DELETED, function () {
+            document.getElementById('areaValue').textContent = '0 مترمربع';
+            document.getElementById('areaHectares').textContent = '0 هکتار';
+            document.getElementById('coordinatesList').innerHTML = 'هیچ نقطه‌ای ترسیم نشده است';
+        });
+        
+        // دکمه‌های کنترل رسم
+        document.getElementById('drawPolygon').addEventListener('click', function() {
+            new L.Draw.Polygon(map, drawControl.options.draw.polygon).enable();
+        });
+        
+        document.getElementById('drawRectangle').addEventListener('click', function() {
+            new L.Draw.Rectangle(map, drawControl.options.draw.rectangle).enable();
+        });
+        
+        document.getElementById('drawCircle').addEventListener('click', function() {
+            new L.Draw.Circle(map, drawControl.options.draw.circle).enable();
+        });
+        
+        document.getElementById('clearAll').addEventListener('click', function() {
+            drawnItems.clearLayers();
+            document.getElementById('areaValue').textContent = '0 مترمربع';
+            document.getElementById('areaHectares').textContent = '0 هکتار';
+            document.getElementById('coordinatesList').innerHTML = 'هیچ نقطه‌ای ترسیم نشده است';
+        });
+        
+        // آپلود فایل KML
+        document.getElementById('kmlFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const kmlText = e.target.result;
+                parseKML(kmlText);
+            };
+            reader.readAsText(file);
+        });
+        
+        // تابع تجزیه و نمایش KML
+        function parseKML(kmlText) {
+            try {
+                // ایجاد یک المان موقت برای تجزیه XML
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(kmlText, "text/xml");
+                
+                // بررسی خطاهای XML
+                const parseError = xmlDoc.getElementsByTagName("parsererror")[0];
+                if (parseError) {
+                    throw new Error("خطا در تجزیه فایل KML: " + parseError.textContent);
+                }
+                
+                // حذف لایه‌های KML قبلی
+                clearKmlLayers();
+                
+                // پیدا کردن تمام Placemarkها در KML
+                const placemarks = xmlDoc.getElementsByTagName("Placemark");
+                
+                if (placemarks.length === 0) {
+                    alert("هیچ داده جغرافیایی در فایل KML یافت نشد.");
+                    return;
+                }
+                
+                // پردازش هر Placemark
+                for (let i = 0; i < placemarks.length; i++) {
+                    const placemark = placemarks[i];
+                    const nameElement = placemark.getElementsByTagName("name")[0];
+                    const name = nameElement ? nameElement.textContent : `لایه ${i+1}`;
+                    
+                    // پیدا کردن مختصات
+                    const coordinatesElements = placemark.getElementsByTagName("coordinates");
+                    
+                    for (let j = 0; j < coordinatesElements.length; j++) {
+                        const coordsText = coordinatesElements[j].textContent.trim();
+                        const coordsArray = parseCoordinates(coordsText);
+                        
+                        if (coordsArray.length > 0) {
+                            // ایجاد لایه بر اساس نوع هندسه
+                            let layer;
+                            if (coordsArray.length === 1) {
+                                // نقطه
+                                layer = L.marker([coordsArray[0][1], coordsArray[0][0]]).bindPopup(name);
+                            } else if (coordsArray[0][0] === coordsArray[coordsArray.length-1][0] && 
+                                      coordsArray[0][1] === coordsArray[coordsArray.length-1][1]) {
+                                // چندضلعی (اولین و آخرین نقطه یکسان)
+                                layer = L.polygon(coordsArray.map(coord => [coord[1], coord[0]]), {
+                                    color: '#2ecc71',
+                                    fillColor: '#2ecc71',
+                                    fillOpacity: 0.2
+                                }).bindPopup(name);
+                            } else {
+                                // خط
+                                layer = L.polyline(coordsArray.map(coord => [coord[1], coord[0]]), {
+                                    color: '#2ecc71'
+                                }).bindPopup(name);
+                            }
+                            
+                            layer.addTo(map);
+                            kmlLayers.push(layer);
+                        }
+                    }
+                }
+                
+                // به روزرسانی اطلاعات نمایش
+                updateKmlInfo();
+                
+                // تنظیم نمایش نقشه بر روی تمام لایه‌های KML
+                if (kmlLayers.length > 0) {
+                    const group = new L.featureGroup(kmlLayers);
+                    map.fitBounds(group.getBounds());
+                }
+                
+                alert(`فایل KML با موفقیت بارگذاری شد. ${placemarks.length} المان جغرافیایی نمایش داده شد.`);
+                
+            } catch (error) {
+                console.error("خطا در پردازش فایل KML:", error);
+                alert("خطا در پردازش فایل KML: " + error.message);
+            }
+        }
+        
+        // تابع تجزیه رشته مختصات
+        function parseCoordinates(coordsText) {
+            const coords = [];
+            const lines = coordsText.split(/\s+/);
+            
+            for (let line of lines) {
+                line = line.trim();
+                if (line) {
+                    const parts = line.split(',');
+                    if (parts.length >= 2) {
+                        const lng = parseFloat(parts[0]);
+                        const lat = parseFloat(parts[1]);
+                        if (!isNaN(lat) && !isNaN(lng)) {
+                            coords.push([lng, lat]);
+                        }
+                    }
+                }
+            }
+            
+            return coords;
+        }
+        
+        // تابع پاک کردن لایه‌های KML
+        function clearKmlLayers() {
+            kmlLayers.forEach(layer => {
+                map.removeLayer(layer);
+            });
+            kmlLayers = [];
+            updateKmlInfo();
+        }
+        
+        // تابع به روزرسانی اطلاعات KML
+        function updateKmlInfo() {
+            const kmlInfo = document.getElementById('kmlInfo');
+            const kmlLayerCount = document.getElementById('kmlLayerCount');
+            
+            if (kmlLayers.length > 0) {
+                kmlInfo.style.display = 'block';
+                kmlLayerCount.textContent = kmlLayers.length;
+            } else {
+                kmlInfo.style.display = 'none';
+            }
+        }
+        
+        // حذف لایه KML
+        document.getElementById('clearKml').addEventListener('click', function() {
+            clearKmlLayers();
+            document.getElementById('kmlFile').value = '';
+            alert('لایه‌های KML حذف شدند.');
+        });
+        
+        // تابع محاسبه و نمایش مساحت
+        function updateArea(layer) {
+            let area = 0;
+            
+            if (layer instanceof L.Polygon || layer instanceof L.Rectangle) {
+                area = L.GeometryUtil.geodesicArea(layer.getLatLngs()[0]);
+            } else if (layer instanceof L.Circle) {
+                area = Math.PI * Math.pow(layer.getRadius(), 2);
+            }
+            
+            // تبدیل به مترمربع و هکتار
+            const areaMeters = Math.round(area);
+            const areaHectares = (area / 10000).toFixed(2);
+            
+            document.getElementById('areaValue').textContent = areaMeters.toLocaleString() + ' مترمربع';
+            document.getElementById('areaHectares').textContent = areaHectares + ' هکتار';
+        }
+        
+        // تابع نمایش مختصات
+        function updateCoordinates(layer) {
+            let coordinates = [];
+            
+            if (layer instanceof L.Polygon || layer instanceof L.Rectangle) {
+                coordinates = layer.getLatLngs()[0];
+            } else if (layer instanceof L.Circle) {
+                const center = layer.getLatLng();
+                coordinates = [center];
+            }
+            
+            let coordinatesHtml = '';
+            coordinates.forEach(function(coord, index) {
+                coordinatesHtml += `<div class="coordinate-item">${index + 1}. ${coord.lat.toFixed(6)}, ${coord.lng.toFixed(6)}</div>`;
+            });
+            
+            document.getElementById('coordinatesList').innerHTML = coordinatesHtml;
+        }
+        
+        // تغییر تم
+        function toggleTheme() {
+            const body = document.body;
+            const themeToggle = document.getElementById('themeToggle');
+            
+            body.classList.toggle('dark-theme');
+            
+            if (body.classList.contains('dark-theme')) {
+                themeToggle.innerHTML = '<i class="fas fa-sun"></i> تم روشن';
+                // تغییر نقشه به حالت تاریک
+                map.removeLayer(map.getLayers()[0]);
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+                }).addTo(map);
+            } else {
+                themeToggle.innerHTML = '<i class="fas fa-moon"></i> تم تاریک';
+                // تغییر نقشه به حالت روشن
+                map.removeLayer(map.getLayers()[0]);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                }).addTo(map);
+            }
+        }
+        
+        // اضافه کردن نشانگر مرکز شیراز
+        L.marker(shirazCoords)
+            .addTo(map)
+            .bindPopup('شیراز، ایران')
+            .openPopup();
+        
+        // اضافه کردن کنترل اندازه‌گیری
+        L.control.scale({imperial: false, position: 'bottomleft'}).addTo(map);
+        
+        // اضافه کردن event listener برای تغییر تم
+        document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+    </script>
+</body>
+</html>

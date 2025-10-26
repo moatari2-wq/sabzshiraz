@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تحلیل ارتفاعات سبز شیراز</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-bg: #ffffff;
+            --secondary-bg: #f2f2f7;
+            --tertiary-bg: #e5e5ea;
+            --card-bg: #ffffff;
+            --text-primary: #000000;
+            --text-secondary: #3c3c43;
+            --text-tertiary: #8e8e93;
+            --accent-color: #2e7d32;
+            --accent-light: rgba(46, 125, 50, 0.1);
+            --border-color: #c6c6c8;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --gradient-start: #e8f5e9;
+            --gradient-end: #c8e6c9;
+        }
+
+        [data-theme="dark"] {
+            --primary-bg: #000000;
+            --secondary-bg: #1c1c1e;
+            --tertiary-bg: #2c2c2e;
+            --card-bg: #1c1c1e;
+            --text-primary: #ffffff;
+            --text-secondary: #ebebf5;
+            --text-tertiary: #98989d;
+            --accent-color: #4caf50;
+            --accent-light: rgba(76, 175, 80, 0.2);
+            --border-color: #38383a;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            --gradient-start: #1c3b1e;
+            --gradient-end: #2d5a2f;
+        }
+
+        * {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Tahoma, sans-serif;
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        body {
+            background-color: var(--primary-bg);
+            color: var(--text-primary);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 20px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        h1 {
+            color: var(--text-primary);
+            margin-bottom: 10px;
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            margin-bottom: 20px;
+        }
+
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: var(--shadow);
+            z-index: 100;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        .region-selector {
+            padding: 12px 16px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            background-color: var(--card-bg);
+            font-size: 1rem;
+            color: var(--text-primary);
+            cursor: pointer;
+            min-width: 180px;
+            box-shadow: var(--shadow);
+        }
+
+        .stats-highlights {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            color: var(--text-primary);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            flex: 1;
+            min-width: 180px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+        }
+
+        .stat-card h3 {
+            margin: 0 0 10px 0;
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .stat-card .value {
+            font-size: 1.6rem;
+            font-weight: 600;
+        }
+
+        .charts-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .chart-box {
+            background-color: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            transition: transform 0.3s ease;
+        }
+
+        .chart-box:hover {
+            transform: translateY(-5px);
+        }
+
+        .chart-title {
+            text-align: center;
+            color: var(--text-primary);
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        .analysis {
+            background: var(--secondary-bg);
+            padding: 25px;
+            border-radius: 12px;
+            margin-top: 30px;
+            line-height: 1.7;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+        }
+
+        .analysis h2 {
+            color: var(--text-primary);
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1.4rem;
+            font-weight: 600;
+        }
+
+        .highlight {
+            background-color: var(--accent-light);
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-weight: 500;
+            color: var(--accent-color);
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+            color: var(--text-tertiary);
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .charts-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .chart-box {
+                padding: 15px;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .region-selector {
+                width: 100%;
+                max-width: 300px;
+            }
+            
+            .stats-highlights {
+                flex-direction: column;
+            }
+            
+            .stat-card {
+                min-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="theme-toggle" id="themeToggle">
+        <i class="fas fa-moon"></i>
+    </button>
+
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-mountain"></i> تحلیل ارتفاعات سبز شهر شیراز</h1>
+            <div class="subtitle">بررسی و تحلیل مساحت فضای سبز در ارتفاعات مناطق مختلف شیراز</div>
+        </header>
+
+        <div class="controls">
+            <select id="regionSelect" class="region-selector">
+                <option value="all">همه مناطق</option>
+            </select>
+            <div class="stat-card">
+                <h3>مجموع مساحت ارتفاعات سبز</h3>
+                <div class="value" id="totalArea">17,091,000</div>
+                <div>متر مربع</div>
+            </div>
+            <div class="stat-card">
+                <h3>تعداد ارتفاعات سبز</h3>
+                <div class="value" id="totalCount">12</div>
+                <div>محدوده</div>
+            </div>
+            <div class="stat-card">
+                <h3>میانگین مساحت هر محدوده</h3>
+                <div class="value" id="avgArea">1,424,250</div>
+                <div>متر مربع</div>
+            </div>
+        </div>
+
+        <div class="charts-container">
+            <div class="chart-box">
+                <div class="chart-title">توزیع مساحت ارتفاعات سبز بر اساس منطقه</div>
+                <canvas id="areaByRegionChart"></canvas>
+            </div>
+            <div class="chart-box">
+                <div class="chart-title">مقایسه مساحت ارتفاعات سبز مناطق</div>
+                <canvas id="regionComparisonChart"></canvas>
+            </div>
+            <div class="chart-box">
+                <div class="chart-title">نمودار حبابی: توزیع ارتفاعات سبز</div>
+                <canvas id="bubbleChart"></canvas>
+            </div>
+            <div class="chart-box">
+                <div class="chart-title">سهم مناطق از کل مساحت ارتفاعات سبز</div>
+                <canvas id="pieChart"></canvas>
+            </div>
+        </div>
+
+        <div class="analysis">
+            <h2><i class="fas fa-chart-line"></i> تحلیل داده‌ها</h2>
+            <div id="analysisText"></div>
+        </div>
+
+        <div class="footer">
+            <p>تحلیل داده‌های ارتفاعات سبز شهر شیراز - سال ۱۴۰۳</p>
+        </div>
+    </div>
+
+    <script>
+        // مدیریت تم
+        const themeToggle = document.getElementById('themeToggle');
+        const body = document.body;
+        
+        // بررسی ذخیره‌سازی تم
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        body.setAttribute('data-theme', savedTheme);
+        updateThemeIcon(savedTheme);
+        
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = body.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            body.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon(newTheme);
+        });
+        
+        function updateThemeIcon(theme) {
+            const icon = themeToggle.querySelector('i');
+            if (theme === 'dark') {
+                icon.className = 'fas fa-sun';
+            } else {
+                icon.className = 'fas fa-moon';
+            }
+        }
+
+        // داده‌های ارتفاعات سبز شیراز
+        const heightsData = [
+            { responsible: "سازمان سيما منظر و فضاي سبز", region: "منطقه 1", title: "ارتفاعات قنديلي - بلوار چمران", area: 250000 },
+            { responsible: "سازمان سيما منظر و فضاي سبز", region: "منطقه 10", title: "ارتفاعات دراك - بلوار شهيد رجايي", area: 2120000 },
+            { responsible: "سازمان سيما منظر و فضاي سبز", region: "منطقه 10", title: "ارتفاعات كوهستاني گلستان - شهرك گلستان", area: 3000000 },
+            { responsible: "سازمان سيما منظر و فضاي سبز", region: "منطقه 3", title: "ارتفاعات باباكوهي - بلوار جمهوري", area: 4410000 },
+            { responsible: "سازمان سيما منظر و فضاي سبز", region: "منطقه 3", title: "ارتفاعات پارك نور - بلوار امام رضا", area: 2150000 },
+            { responsible: "سازمان سيما منظر و فضاي سبز", region: "منطقه 3", title: "ارتفاعات بام سبز- كمربندي اكبرآباد", area: 591000 },
+            { responsible: "سازمان سيما منظر و فضاي سبز", region: "منطقه 4", title: "ارتفاعات ده شيخ - جاده بوشهر", area: 720000 },
+            { responsible: "سازمان سيما منظر و فضاي سبز", region: "منطقه 6", title: "ارتفاعات انجيره - شهرك انجيره", area: 1070000 },
+            { responsible: "سازمان سيما منظر و فضاي سبز", region: "منطقه 7", title: "ارتفاعات سايت دفن پسماند برمشور - پل فسا", area: 830000 },
+            { responsible: "منطقه 7", region: "منطقه 7", title: "ارتفاعات معراج - 5 كيلومتري جاده شيراز - فسا", area: 250000 },
+            { responsible: "سازمان سيما منظر و فضاي سبز", region: "منطقه 3", title: "ارتفاعات کوه نصر", area: 150000 },
+            { responsible: "سازمان سيما منظر و فضاي سبز", region: "منطقه 9", title: "ارتفاعات كيان آباد - ميان رود", area: 4750000 }
+        ];
+
+        // متغیرهای جهانی برای نمودارها
+        let areaByRegionChart, regionComparisonChart, bubbleChart, pieChart;
+        let selectedRegion = "all";
+
+        // قالب اعداد برای نمایش
+        function formatNumber(num) {
+            return new Intl.NumberFormat('fa-IR').format(num);
+        }
+
+        // پر کردن dropdown مناطق
+        function populateRegionSelector() {
+            const selector = document.getElementById('regionSelect');
+            
+            // استخراج مناطق منحصر به فرد
+            const uniqueRegions = [...new Set(heightsData.map(item => item.region))];
+            
+            uniqueRegions.forEach(region => {
+                const option = document.createElement('option');
+                option.value = region;
+                option.textContent = region;
+                selector.appendChild(option);
+            });
+        }
+
+        // نمودار توزیع مساحت بر اساس منطقه
+        function createAreaByRegionChart() {
+            const ctx = document.getElementById('areaByRegionChart').getContext('2d');
+            
+            let regions, areas;
+            if (selectedRegion === "all") {
+                // گروه‌بندی داده‌ها بر اساس منطقه
+                const regionGroups = {};
+                heightsData.forEach(item => {
+                    if (!regionGroups[item.region]) {
+                        regionGroups[item.region] = 0;
+                    }
+                    regionGroups[item.region] += item.area;
+                });
+                
+                regions = Object.keys(regionGroups);
+                areas = Object.values(regionGroups).map(area => area / 10000); // تبدیل به هکتار
+            } else {
+                const regionData = heightsData.filter(item => item.region === selectedRegion);
+                regions = regionData.map(item => item.title);
+                areas = regionData.map(item => item.area / 10000); // تبدیل به هکتار
+            }
+
+            if (areaByRegionChart) {
+                areaByRegionChart.destroy();
+            }
+
+            areaByRegionChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: regions,
+                    datasets: [{
+                        label: 'مساحت ارتفاعات سبز (هکتار)',
+                        data: areas,
+                        backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: selectedRegion === "all" ? 'مساحت کل ارتفاعات سبز هر منطقه' : `مساحت ارتفاعات سبز ${selectedRegion}`,
+                            font: { size: 16 }
+                        },
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'مساحت (هکتار)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // نمودار مقایسه مناطق
+        function createRegionComparisonChart() {
+            const ctx = document.getElementById('regionComparisonChart').getContext('2d');
+            
+            if (selectedRegion === "all") {
+                // گروه‌بندی داده‌ها بر اساس منطقه
+                const regionGroups = {};
+                heightsData.forEach(item => {
+                    if (!regionGroups[item.region]) {
+                        regionGroups[item.region] = {
+                            totalArea: 0,
+                            count: 0
+                        };
+                    }
+                    regionGroups[item.region].totalArea += item.area;
+                    regionGroups[item.region].count += 1;
+                });
+                
+                const regions = Object.keys(regionGroups);
+                const totalAreas = Object.values(regionGroups).map(group => group.totalArea / 10000); // تبدیل به هکتار
+                const counts = Object.values(regionGroups).map(group => group.count);
+                const avgAreas = Object.values(regionGroups).map(group => (group.totalArea / group.count) / 10000); // تبدیل به هکتار
+
+                if (regionComparisonChart) {
+                    regionComparisonChart.destroy();
+                }
+
+                regionComparisonChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: regions,
+                        datasets: [
+                            {
+                                label: 'مساحت کل (هکتار)',
+                                data: totalAreas,
+                                backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                                borderColor: 'rgba(54, 162, 235, 1)',
+                                borderWidth: 1,
+                                yAxisID: 'y'
+                            },
+                            {
+                                label: 'میانگین مساحت هر محدوده (هکتار)',
+                                data: avgAreas,
+                                backgroundColor: 'rgba(75, 192, 192, 0.7)',
+                                borderColor: 'rgba(75, 192, 192, 1)',
+                                borderWidth: 1,
+                                yAxisID: 'y1'
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'مقایسه مناطق از نظر مساحت ارتفاعات سبز',
+                                font: { size: 16 }
+                            },
+                            legend: {
+                                position: 'top',
+                            }
+                        },
+                        scales: {
+                            y: {
+                                type: 'linear',
+                                display: true,
+                                position: 'left',
+                                title: {
+                                    display: true,
+                                    text: 'مساحت کل (هکتار)'
+                                }
+                            },
+                            y1: {
+                                type: 'linear',
+                                display: true,
+                                position: 'right',
+                                title: {
+                                    display: true,
+                                    text: 'میانگین مساحت (هکتار)'
+                                },
+                                grid: {
+                                    drawOnChartArea: false,
+                                },
+                            }
+                        }
+                    }
+                });
+            } else {
+                // برای منطقه خاص، نمودار میله‌ای ساده از محدوده‌های آن منطقه
+                const regionData = heightsData.filter(item => item.region === selectedRegion);
+                const titles = regionData.map(item => item.title);
+                const areas = regionData.map(item => item.area / 10000); // تبدیل به هکتار
+
+                if (regionComparisonChart) {
+                    regionComparisonChart.destroy();
+                }
+
+                regionComparisonChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: titles,
+                        datasets: [{
+                            label: 'مساحت (هکتار)',
+                            data: areas,
+                            backgroundColor: 'rgba(75, 192, 192, 0.7)',
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: `مقایسه محدوده‌های ارتفاعات سبز در ${selectedRegion}`,
+                                font: { size: 16 }
+                            },
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'مساحت (هکتار)'
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // نمودار حبابی
+        function createBubbleChart() {
+            const ctx = document.getElementById('bubbleChart').getContext('2d');
+            
+            let chartData;
+            if (selectedRegion === "all") {
+                // گروه‌بندی داده‌ها بر اساس منطقه
+                const regionGroups = {};
+                heightsData.forEach(item => {
+                    if (!regionGroups[item.region]) {
+                        regionGroups[item.region] = {
+                            totalArea: 0,
+                            count: 0
+                        };
+                    }
+                    regionGroups[item.region].totalArea += item.area;
+                    regionGroups[item.region].count += 1;
+                });
+                
+                chartData = Object.keys(regionGroups).map(region => ({
+                    x: regionGroups[region].count, // تعداد محدوده‌ها
+                    y: regionGroups[region].totalArea / 10000, // مساحت کل به هکتار
+                    r: Math.sqrt(regionGroups[region].totalArea) / 1000, // اندازه حباب بر اساس مساحت کل
+                    label: region
+                }));
+            } else {
+                const regionData = heightsData.filter(item => item.region === selectedRegion);
+                chartData = regionData.map(item => ({
+                    x: 1, // برای نمایش در یک ستون
+                    y: item.area / 10000, // مساحت به هکتار
+                    r: Math.sqrt(item.area) / 1000, // اندازه حباب بر اساس مساحت
+                    label: item.title
+                }));
+            }
+
+            if (bubbleChart) {
+                bubbleChart.destroy();
+            }
+
+            bubbleChart = new Chart(ctx, {
+                type: 'bubble',
+                data: {
+                    datasets: [{
+                        label: selectedRegion === "all" ? 'مناطق' : 'محدوده‌ها',
+                        data: chartData,
+                        backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: selectedRegion === "all" ? 'رابطه تعداد محدوده‌ها و مساحت کل ارتفاعات سبز' : `محدوده‌های ارتفاعات سبز در ${selectedRegion}`,
+                            font: { size: 16 }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const data = context.raw;
+                                    return `${data.label}: ${data.y.toFixed(1)} هکتار`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: selectedRegion === "all" ? 'تعداد محدوده‌ها' : ''
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'مساحت (هکتار)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // نمودار دایره‌ای
+        function createPieChart() {
+            const ctx = document.getElementById('pieChart').getContext('2d');
+            
+            if (selectedRegion === "all") {
+                // گروه‌بندی داده‌ها بر اساس منطقه
+                const regionGroups = {};
+                heightsData.forEach(item => {
+                    if (!regionGroups[item.region]) {
+                        regionGroups[item.region] = 0;
+                    }
+                    regionGroups[item.region] += item.area;
+                });
+                
+                const regions = Object.keys(regionGroups);
+                const areas = Object.values(regionGroups);
+
+                if (pieChart) {
+                    pieChart.destroy();
+                }
+
+                const colors = [
+                    'rgba(255, 99, 132, 0.7)',
+                    'rgba(54, 162, 235, 0.7)',
+                    'rgba(255, 206, 86, 0.7)',
+                    'rgba(75, 192, 192, 0.7)',
+                    'rgba(153, 102, 255, 0.7)',
+                    'rgba(255, 159, 64, 0.7)',
+                    'rgba(199, 199, 199, 0.7)'
+                ];
+
+                pieChart = new Chart(ctx, {
+                    type: 'pie',
+                    data: {
+                        labels: regions,
+                        datasets: [{
+                            data: areas,
+                            backgroundColor: colors,
+                            borderColor: colors.map(color => color.replace('0.7', '1')),
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'سهم مناطق از کل مساحت ارتفاعات سبز',
+                                font: { size: 16 }
+                            },
+                            legend: {
+                                position: 'bottom',
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const value = context.raw;
+                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                        const percentage = ((value / total) * 100).toFixed(1);
+                                        return `${context.label}: ${formatNumber(value)} متر مربع (${percentage}%)`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            } else {
+                const regionData = heightsData.filter(item => item.region === selectedRegion);
+                const titles = regionData.map(item => item.title);
+                const areas = regionData.map(item => item.area);
+
+                if (pieChart) {
+                    pieChart.destroy();
+                }
+
+                const colors = [
+                    'rgba(255, 99, 132, 0.7)',
+                    'rgba(54, 162, 235, 0.7)',
+                    'rgba(255, 206, 86, 0.7)',
+                    'rgba(75, 192, 192, 0.7)',
+                    'rgba(153, 102, 255, 0.7)'
+                ];
+
+                pieChart = new Chart(ctx, {
+                    type: 'pie',
+                    data: {
+                        labels: titles,
+                        datasets: [{
+                            data: areas,
+                            backgroundColor: colors,
+                            borderColor: colors.map(color => color.replace('0.7', '1')),
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: `سهم محدوده‌های ارتفاعات سبز در ${selectedRegion}`,
+                                font: { size: 16 }
+                            },
+                            legend: {
+                                position: 'bottom',
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const value = context.raw;
+                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                        const percentage = ((value / total) * 100).toFixed(1);
+                                        return `${context.label}: ${formatNumber(value)} متر مربع (${percentage}%)`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // تحلیل داده‌ها
+        function generateAnalysis() {
+            const analysisText = document.getElementById('analysisText');
+            
+            if (selectedRegion === "all") {
+                // تحلیل کلی
+                const totalArea = heightsData.reduce((sum, item) => sum + item.area, 0);
+                const totalCount = heightsData.length;
+                const avgArea = totalArea / totalCount;
+                
+                // گروه‌بندی داده‌ها بر اساس منطقه
+                const regionGroups = {};
+                heightsData.forEach(item => {
+                    if (!regionGroups[item.region]) {
+                        regionGroups[item.region] = {
+                            totalArea: 0,
+                            count: 0
+                        };
+                    }
+                    regionGroups[item.region].totalArea += item.area;
+                    regionGroups[item.region].count += 1;
+                });
+                
+                // یافتن منطقه با بیشترین و کمترین مساحت
+                let maxArea = 0;
+                let minArea = Infinity;
+                let regionWithMaxArea = '';
+                let regionWithMinArea = '';
+                
+                Object.keys(regionGroups).forEach(region => {
+                    if (regionGroups[region].totalArea > maxArea) {
+                        maxArea = regionGroups[region].totalArea;
+                        regionWithMaxArea = region;
+                    }
+                    if (regionGroups[region].totalArea < minArea) {
+                        minArea = regionGroups[region].totalArea;
+                        regionWithMinArea = region;
+                    }
+                });
+                
+                // یافتن بزرگترین و کوچکترین محدوده
+                const maxHeightsArea = Math.max(...heightsData.map(item => item.area));
+                const minHeightsArea = Math.min(...heightsData.map(item => item.area));
+                const maxHeights = heightsData.find(item => item.area === maxHeightsArea);
+                const minHeights = heightsData.find(item => item.area === minHeightsArea);
+
+                let analysis = `
+                    <p>بر اساس داده‌های ارتفاعات سبز شیراز، تحلیل‌های زیر قابل استخراج است:</p>
+                    <ul>
+                        <li>کل مساحت ارتفاعات سبز شهر شیراز <span class="highlight">${formatNumber(totalArea)}</span> متر مربع است.</li>
+                        <li>تعداد کل محدوده‌های ارتفاعات سبز <span class="highlight">${totalCount}</span> محدوده است.</li>
+                        <li>میانگین مساحت هر محدوده <span class="highlight">${formatNumber(Math.round(avgArea))}</span> متر مربع است.</li>
+                        <li>منطقه <span class="highlight">${regionWithMaxArea}</span> با ${formatNumber(maxArea)} متر مربع، بیشترین مساحت ارتفاعات سبز را دارد.</li>
+                        <li>منطقه <span class="highlight">${regionWithMinArea}</span> با ${formatNumber(minArea)} متر مربع، کمترین مساحت ارتفاعات سبز را دارد.</li>
+                        <li>بزرگترین محدوده ارتفاعات سبز: <span class="highlight">${maxHeights.title}</span> در ${maxHeights.region} با ${formatNumber(maxHeightsArea)} متر مربع</li>
+                        <li>کوچکترین محدوده ارتفاعات سبز: <span class="highlight">${minHeights.title}</span> در ${minHeights.region} با ${formatNumber(minHeightsArea)} متر مربع</li>
+                        <li>منطقه 3 با ${formatNumber(regionGroups["منطقه 3"].totalArea)} متر مربع بیشترین سهم را در ارتفاعات سبز دارد.</li>
+                        <li>منطقه 10 با ${formatNumber(regionGroups["منطقه 10"].totalArea)} متر مربع در رتبه دوم قرار دارد.</li>
+                    </ul>
+                `;
+
+                analysisText.innerHTML = analysis;
+            } else {
+                // تحلیل منطقه خاص
+                const regionData = heightsData.filter(item => item.region === selectedRegion);
+                const totalArea = regionData.reduce((sum, item) => sum + item.area, 0);
+                const totalCount = regionData.length;
+                const avgArea = totalArea / totalCount;
+                
+                // یافتن بزرگترین و کوچکترین محدوده در منطقه
+                const maxArea = Math.max(...regionData.map(item => item.area));
+                const minArea = Math.min(...regionData.map(item => item.area));
+                const maxHeights = regionData.find(item => item.area === maxArea);
+                const minHeights = regionData.find(item => item.area === minArea);
+                
+                // محاسبه سهم از کل شهر
+                const totalCityArea = heightsData.reduce((sum, item) => sum + item.area, 0);
+                const sharePercentage = ((totalArea / totalCityArea) * 100).toFixed(1);
+
+                let analysis = `
+                    <p>تحلیل داده‌های ارتفاعات سبز <span class="highlight">${selectedRegion}</span>:</p>
+                    <ul>
+                        <li>مساحت کل ارتفاعات سبز این منطقه <span class="highlight">${formatNumber(totalArea)}</span> متر مربع است.</li>
+                        <li>تعداد محدوده‌های ارتفاعات سبز در این منطقه <span class="highlight">${totalCount}</span> محدوده است.</li>
+                        <li>میانگین مساحت هر محدوده <span class="highlight">${formatNumber(Math.round(avgArea))}</span> متر مربع است.</li>
+                        <li>این منطقه <span class="highlight">${sharePercentage}%</span> از کل ارتفاعات سبز شهر را شامل می‌شود.</li>
+                        <li>بزرگترین محدوده: <span class="highlight">${maxHeights.title}</span> با ${formatNumber(maxArea)} متر مربع</li>
+                        <li>کوچکترین محدوده: <span class="highlight">${minHeights.title}</span> با ${formatNumber(minArea)} متر مربع</li>
+                    </ul>
+                `;
+
+                analysisText.innerHTML = analysis;
+            }
+        }
+
+        // به‌روزرسانی کارت‌های آماری
+        function updateStatsCards() {
+            let totalArea, totalCount, avgArea;
+            
+            if (selectedRegion === "all") {
+                totalArea = heightsData.reduce((sum, item) => sum + item.area, 0);
+                totalCount = heightsData.length;
+                avgArea = totalArea / totalCount;
+            } else {
+                const regionData = heightsData.filter(item => item.region === selectedRegion);
+                totalArea = regionData.reduce((sum, item) => sum + item.area, 0);
+                totalCount = regionData.length;
+                avgArea = totalArea / totalCount;
+            }
+            
+            document.getElementById('totalArea').textContent = formatNumber(totalArea);
+            document.getElementById('totalCount').textContent = formatNumber(totalCount);
+            document.getElementById('avgArea').textContent = formatNumber(Math.round(avgArea));
+        }
+
+        // به‌روزرسانی تمام نمودارها و تحلیل
+        function updateAllCharts() {
+            createAreaByRegionChart();
+            createRegionComparisonChart();
+            createBubbleChart();
+            createPieChart();
+            generateAnalysis();
+            updateStatsCards();
+        }
+
+        // راه‌اندازی تمام توابع پس از بارگذاری صفحه
+        document.addEventListener('DOMContentLoaded', function() {
+            populateRegionSelector();
+            updateAllCharts();
+
+            // افزودن event listener برای تغییر منطقه
+            document.getElementById('regionSelect').addEventListener('change', function() {
+                selectedRegion = this.value;
+                updateAllCharts();
+            });
+        });
+    </script>
+</body>
+</html>

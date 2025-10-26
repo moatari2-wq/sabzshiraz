@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تحلیل چاه‌های فضای سبز مناطق</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-blue: #1a73e8;
+            --light-blue: #e3f2fd;
+            --dark-blue: #0d47a1;
+            --water-blue: #4fc3f7;
+            --deep-blue: #0288d1;
+            --accent-color: #00bcd4;
+            --bg-color: #e3f2fd;
+            --secondary-bg: #bbdefb;
+            --text-color: #333;
+            --card-bg: white;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --header-bg: linear-gradient(to right, var(--dark-blue), var(--primary-blue));
+            --table-header-bg: linear-gradient(to right, var(--primary-blue), var(--deep-blue));
+            --table-even-bg: #f5f9ff;
+            --table-hover-bg: #e3f2fd;
+            --region-badge-bg: var(--light-blue);
+            --region-badge-color: var(--dark-blue);
+            --highlight-bg: var(--light-blue);
+            --highlight-color: var(--dark-blue);
+        }
+
+        .dark-theme {
+            --primary-blue: #64b5f6;
+            --light-blue: #0d47a1;
+            --dark-blue: #bbdefb;
+            --water-blue: #4fc3f7;
+            --deep-blue: #90caf9;
+            --accent-color: #00bcd4;
+            --bg-color: #121212;
+            --secondary-bg: #1e1e1e;
+            --text-color: #e0e0e0;
+            --card-bg: #2d2d2d;
+            --shadow-color: rgba(0, 0, 0, 0.5);
+            --header-bg: linear-gradient(to right, #0d47a1, #1565c0);
+            --table-header-bg: linear-gradient(to right, #1565c0, #1976d2);
+            --table-even-bg: #383838;
+            --table-hover-bg: #424242;
+            --region-badge-bg: #0d47a1;
+            --region-badge-color: #bbdefb;
+            --highlight-bg: #0d47a1;
+            --highlight-color: #bbdefb;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Tahoma', Arial, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, var(--bg-color) 0%, var(--secondary-bg) 100%);
+            color: var(--text-color);
+            direction: rtl;
+            padding: 20px;
+            min-height: 100vh;
+            transition: all 0.3s ease;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        header {
+            background: var(--header-bg);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            box-shadow: 0 5px 15px var(--shadow-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        header::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='%23009688' fill-opacity='0.2' d='M0,96L48,112C96,128,192,160,288,186.7C384,213,480,235,576,213.3C672,192,768,128,864,128C960,128,1056,192,1152,192C1248,192,1344,128,1392,96L1440,64L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'%3E%3C/path%3E%3C/svg%3E");
+            background-size: cover;
+            opacity: 0.3;
+        }
+        
+        .header-content {
+            position: relative;
+            z-index: 1;
+        }
+        
+        h1 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        h1 i {
+            font-size: 2.5rem;
+            color: var(--water-blue);
+        }
+        
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .theme-toggle {
+            position: absolute;
+            left: 25px;
+            top: 25px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            z-index: 2;
+        }
+        
+        .theme-toggle:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        select, button {
+            padding: 12px 20px;
+            border-radius: 50px;
+            border: none;
+            font-size: 16px;
+            box-shadow: 0 3px 10px var(--shadow-color);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        select {
+            background-color: var(--card-bg);
+            border: 2px solid var(--primary-blue);
+            min-width: 200px;
+            color: var(--text-color);
+        }
+        
+        button {
+            background: linear-gradient(to right, var(--primary-blue), var(--deep-blue));
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px var(--shadow-color);
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px var(--shadow-color);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            transition: transform 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stat-icon {
+            width: 70px;
+            height: 70px;
+            background: var(--light-blue);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            color: var(--primary-blue);
+        }
+        
+        .stat-content h3 {
+            font-size: 1rem;
+            color: #666;
+            margin-bottom: 8px;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--dark-blue);
+        }
+        
+        .charts-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .chart-box {
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px var(--shadow-color);
+        }
+        
+        .chart-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            color: var(--dark-blue);
+            font-size: 1.3rem;
+        }
+        
+        .chart-title i {
+            color: var(--primary-blue);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: var(--card-bg);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px var(--shadow-color);
+        }
+        
+        th, td {
+            padding: 15px 20px;
+            text-align: center;
+            border-bottom: 1px solid var(--table-even-bg);
+        }
+        
+        th {
+            background: var(--table-header-bg);
+            color: white;
+            font-weight: 600;
+        }
+        
+        tr:nth-child(even) {
+            background-color: var(--table-even-bg);
+        }
+        
+        tr:hover {
+            background-color: var(--table-hover-bg);
+        }
+        
+        .region-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            background: var(--region-badge-bg);
+            color: var(--region-badge-color);
+            border-radius: 20px;
+            font-weight: bold;
+        }
+        
+        .analysis {
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px var(--shadow-color);
+            margin-top: 30px;
+        }
+        
+        .analysis h2 {
+            color: var(--dark-blue);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .analysis-content {
+            line-height: 1.8;
+            color: var(--text-color);
+        }
+        
+        .highlight {
+            background: var(--highlight-bg);
+            padding: 3px 8px;
+            border-radius: 5px;
+            font-weight: bold;
+            color: var(--highlight-color);
+        }
+        
+        @media (max-width: 768px) {
+            .charts-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .chart-box {
+                min-width: 100%;
+            }
+            
+            header {
+                flex-direction: column;
+                text-align: center;
+                gap: 20px;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .theme-toggle {
+                position: relative;
+                left: auto;
+                top: auto;
+                margin-bottom: 15px;
+            }
+        }
+        
+        .water-wave {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            overflow: hidden;
+            line-height: 0;
+        }
+        
+        .water-wave svg {
+            position: relative;
+            display: block;
+            width: 100%;
+            height: 40px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <button class="theme-toggle" id="themeToggle">
+                <i class="fas fa-moon"></i> تم تاریک
+            </button>
+            <div class="header-content">
+                <h1><i class="fas fa-water"></i> تحلیل چاه‌های فضای سبز مناطق</h1>
+                <p class="subtitle">بررسی توزیع و آمار چاه‌های آب در مناطق مختلف شهری</p>
+            </div>
+            <div class="water-wave">
+                <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
+                    <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" fill="rgba(255,255,255,0.2)"></path>
+                </svg>
+            </div>
+        </header>
+        
+        <div class="controls">
+            <select id="regionSelect">
+                <option value="all">همه مناطق</option>
+                <option value="1">منطقه 1</option>
+                <option value="2">منطقه 2</option>
+                <option value="3">منطقه 3</option>
+                <option value="4">منطقه 4</option>
+                <option value="5">منطقه 5</option>
+                <option value="6">منطقه 6</option>
+                <option value="7">منطقه 7</option>
+                <option value="8">منطقه 8</option>
+                <option value="10">منطقه 10</option>
+                <option value="11">منطقه 11</option>
+            </select>
+            <button id="resetBtn"><i class="fas fa-sync-alt"></i> بازنشانی فیلتر</button>
+        </div>
+        
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-tint"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>تعداد کل چاه‌ها</h3>
+                    <div class="stat-value" id="totalWells">30</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-map-marker-alt"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>مناطق دارای چاه</h3>
+                    <div class="stat-value" id="totalRegions">10</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-chart-bar"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>میانگین چاه در هر منطقه</h3>
+                    <div class="stat-value" id="avgWells">3</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-star"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>منطقه با بیشترین چاه</h3>
+                    <div class="stat-value" id="maxRegion">منطقه 2</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="charts-container">
+            <div class="chart-box">
+                <h2 class="chart-title"><i class="fas fa-chart-bar"></i> توزیع چاه‌ها در مناطق</h2>
+                <canvas id="barChart"></canvas>
+            </div>
+            <div class="chart-box">
+                <h2 class="chart-title"><i class="fas fa-chart-pie"></i> سهم مناطق از کل چاه‌ها</h2>
+                <canvas id="pieChart"></canvas>
+            </div>
+        </div>
+        
+        <div class="chart-box">
+            <h2 class="chart-title"><i class="fas fa-table"></i> جدول داده‌های چاه‌های فضای سبز</h2>
+            <table id="dataTable">
+                <thead>
+                    <tr>
+                        <th>منطقه</th>
+                        <th>تعداد چاه‌ها</th>
+                        <th>سهم از کل</th>
+                        <th>وضعیت</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <!-- داده‌ها توسط جاوااسکریپت پر می‌شوند -->
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="analysis">
+            <h2><i class="fas fa-chart-line"></i> تحلیل داده‌ها</h2>
+            <div class="analysis-content" id="analysisText">
+                <!-- تحلیل توسط جاوااسکریپت پر می‌شود -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // داده‌های اصلی
+        const wellData = [
+            { region: "1", wells: 3 },
+            { region: "2", wells: 6 },
+            { region: "3", wells: 2 },
+            { region: "4", wells: 4 },
+            { region: "5", wells: 3 },
+            { region: "6", wells: 2 },
+            { region: "7", wells: 3 },
+            { region: "8", wells: 1 },
+            { region: "10", wells: 3 },
+            { region: "11", wells: 3 }
+        ];
+
+        // تنظیمات اولیه
+        let filteredData = [...wellData];
+        let barChart, pieChart;
+
+        // رنگ‌های آبی برای نمودارها
+        const blueColors = [
+            '#1a73e8', '#4285f4', '#5c9bf2', '#7aaff3', '#98c3f5',
+            '#b6d7f7', '#d4ebf9', '#0d47a1', '#1565c0', '#1976d2'
+        ];
+
+        // آماده‌سازی داده‌ها برای نمودارها
+        function prepareChartData(data) {
+            const regions = data.map(item => `منطقه ${item.region}`);
+            const wells = data.map(item => item.wells);
+            
+            return {
+                labels: regions,
+                datasets: [{
+                    label: 'تعداد چاه‌ها',
+                    data: wells,
+                    backgroundColor: blueColors.slice(0, data.length),
+                    borderColor: blueColors.slice(0, data.length).map(color => color.replace('0.8', '1')),
+                    borderWidth: 1
+                }]
+            };
+        }
+
+        // ایجاد نمودار میله‌ای
+        function createBarChart(data) {
+            const ctx = document.getElementById('barChart').getContext('2d');
+            const chartData = prepareChartData(data);
+            
+            if (barChart) {
+                barChart.destroy();
+            }
+            
+            barChart = new Chart(ctx, {
+                type: 'bar',
+                data: chartData,
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `تعداد چاه‌ها: ${context.parsed.y}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'تعداد چاه‌ها'
+                            },
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // ایجاد نمودار دایره‌ای
+        function createPieChart(data) {
+            const ctx = document.getElementById('pieChart').getContext('2d');
+            const chartData = prepareChartData(data);
+            
+            if (pieChart) {
+                pieChart.destroy();
+            }
+            
+            pieChart = new Chart(ctx, {
+                type: 'pie',
+                data: chartData,
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'left',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const value = context.parsed;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = Math.round((value / total) * 100);
+                                    return `${context.label}: ${value} چاه (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // به‌روزرسانی جدول داده‌ها
+        function updateTable(data) {
+            const tableBody = document.getElementById('tableBody');
+            tableBody.innerHTML = '';
+            
+            const totalWells = data.reduce((sum, item) => sum + item.wells, 0);
+            
+            data.forEach(item => {
+                const percentage = Math.round((item.wells / totalWells) * 100);
+                let status = '';
+                
+                if (item.wells >= 5) status = '<span style="color:green">عالی</span>';
+                else if (item.wells >= 3) status = '<span style="color:orange">متوسط</span>';
+                else status = '<span style="color:red">نیاز به توجه</span>';
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><span class="region-badge">منطقه ${item.region}</span></td>
+                    <td>${item.wells}</td>
+                    <td>${percentage}%</td>
+                    <td>${status}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        // به‌روزرسانی آمار
+        function updateStats(data) {
+            const totalWells = data.reduce((sum, item) => sum + item.wells, 0);
+            const totalRegions = data.length;
+            const avgWells = Math.round(totalWells / totalRegions);
+            
+            // پیدا کردن منطقه با بیشترین چاه
+            let maxWells = 0;
+            let maxRegion = '';
+            data.forEach(item => {
+                if (item.wells > maxWells) {
+                    maxWells = item.wells;
+                    maxRegion = `منطقه ${item.region}`;
+                }
+            });
+            
+            document.getElementById('totalWells').textContent = totalWells;
+            document.getElementById('totalRegions').textContent = totalRegions;
+            document.getElementById('avgWells').textContent = avgWells;
+            document.getElementById('maxRegion').textContent = maxRegion;
+        }
+
+        // به‌روزرسانی تحلیل
+        function updateAnalysis(data) {
+            const analysisText = document.getElementById('analysisText');
+            const totalWells = data.reduce((sum, item) => sum + item.wells, 0);
+            const totalRegions = data.length;
+            const avgWells = Math.round(totalWells / totalRegions);
+            
+            // پیدا کردن منطقه با بیشترین و کمترین چاه
+            let maxWells = 0;
+            let maxRegion = '';
+            let minWells = Infinity;
+            let minRegion = '';
+            
+            data.forEach(item => {
+                if (item.wells > maxWells) {
+                    maxWells = item.wells;
+                    maxRegion = item.region;
+                }
+                if (item.wells < minWells) {
+                    minWells = item.wells;
+                    minRegion = item.region;
+                }
+            });
+            
+            let analysisHTML = `
+                <p>بر اساس داده‌های موجود، <span class="highlight">${totalWells} چاه فضای سبز</span> در <span class="highlight">${totalRegions} منطقه</span> شهری توزیع شده‌اند.</p>
+                <p>میانگین تعداد چاه‌ها در هر منطقه <span class="highlight">${avgWells} چاه</span> می‌باشد.</p>
+                <p>منطقه <span class="highlight">${maxRegion}</span> با <span class="highlight">${maxWells} چاه</span> بیشترین تعداد چاه فضای سبز را دارد، در حالی که منطقه <span class="highlight">${minRegion}</span> با <span class="highlight">${minWells} چاه</span> کمترین تعداد را به خود اختصاص داده است.</p>
+            `;
+            
+            if (data.length === 1) {
+                const region = data[0];
+                analysisHTML += `
+                    <p>منطقه منتخب (<span class="highlight">${region.region}</span>) دارای <span class="highlight">${region.wells} چاه</span> فضای سبز می‌باشد که <span class="highlight">${Math.round((region.wells / totalWells) * 100)}%</span> از کل چاه‌ها را شامل می‌شود.</p>
+                `;
+            }
+            
+            analysisText.innerHTML = analysisHTML;
+        }
+
+        // فیلتر داده‌ها بر اساس منطقه
+        function filterData(region) {
+            if (region === 'all') {
+                filteredData = [...wellData];
+            } else {
+                filteredData = wellData.filter(item => item.region === region);
+            }
+            
+            updateCharts();
+            updateTable(filteredData);
+            updateStats(filteredData);
+            updateAnalysis(filteredData);
+        }
+
+        // به‌روزرسانی همه نمودارها
+        function updateCharts() {
+            createBarChart(filteredData);
+            createPieChart(filteredData);
+        }
+
+        // تغییر تم
+        function toggleTheme() {
+            const body = document.body;
+            const themeToggle = document.getElementById('themeToggle');
+            
+            body.classList.toggle('dark-theme');
+            
+            if (body.classList.contains('dark-theme')) {
+                themeToggle.innerHTML = '<i class="fas fa-sun"></i> تم روشن';
+            } else {
+                themeToggle.innerHTML = '<i class="fas fa-moon"></i> تم تاریک';
+            }
+        }
+
+        // راه‌اندازی اولیه
+        function init() {
+            // ایجاد نمودارها با داده‌های اولیه
+            updateCharts();
+            updateTable(filteredData);
+            updateStats(filteredData);
+            updateAnalysis(filteredData);
+            
+            // اضافه کردن event listener برای فیلتر منطقه
+            document.getElementById('regionSelect').addEventListener('change', function() {
+                filterData(this.value);
+            });
+            
+            // اضافه کردن event listener برای دکمه بازنشانی
+            document.getElementById('resetBtn').addEventListener('click', function() {
+                document.getElementById('regionSelect').value = 'all';
+                filterData('all');
+            });
+            
+            // اضافه کردن event listener برای تغییر تم
+            document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+        }
+
+        // اجرای برنامه پس از بارگذاری صفحه
+        window.onload = init;
+    </script>
+</body>
+</html>

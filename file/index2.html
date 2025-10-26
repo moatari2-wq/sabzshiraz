@@ -1,0 +1,1242 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تحلیل سرانه فضای سبز شهر شیراز</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* متغیرهای تم روشن */
+        :root {
+            --bg-primary: #f5f9f7;
+            --bg-secondary: #ffffff;
+            --bg-card: #ffffff;
+            --text-primary: #2d4a3b;
+            --text-secondary: #6b8a7a;
+            --accent: #4a7c59;
+            --accent-light: #e8f0ec;
+            --border: #e0e0e0;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            --header-gradient: linear-gradient(135deg, #2d4a3b 0%, #4a7c59 100%);
+            --stat-card: linear-gradient(135deg, #4a7c59, #6b8a7a);
+            --highlight: #e8f5e9;
+            --highlight-text: #1b5e20;
+        }
+
+        /* متغیرهای تم تاریک */
+        .dark-theme {
+            --bg-primary: #1c1c1e;
+            --bg-secondary: #2c2c2e;
+            --bg-card: #2c2c2e;
+            --text-primary: #f2f2f7;
+            --text-secondary: #aeaeb2;
+            --accent: #32d74b;
+            --accent-light: #1a3a2e;
+            --border: #3a3a3c;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            --header-gradient: linear-gradient(135deg, #0a5c36 0%, #1a7d4a 100%);
+            --stat-card: linear-gradient(135deg, #0a5c36, #1a7d4a);
+            --highlight: #1a3a2e;
+            --highlight-text: #4cd964;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Tahoma', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            transition: all 0.3s ease;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background-color: var(--bg-secondary);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+
+        header {
+            background: var(--header-gradient);
+            color: white;
+            padding: 30px 0;
+            text-align: center;
+            position: relative;
+        }
+
+        .header-controls {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            gap: 10px;
+        }
+
+        .theme-toggle, .admin-toggle {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: white;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+        }
+
+        .theme-toggle:hover, .admin-toggle:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 25px;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .region-selector {
+            padding: 12px 20px;
+            border-radius: 8px;
+            border: 2px solid var(--accent);
+            background-color: var(--bg-primary);
+            font-size: 1rem;
+            color: var(--text-primary);
+            cursor: pointer;
+            min-width: 200px;
+        }
+
+        .stats-highlights {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: var(--stat-card);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            flex: 1;
+            min-width: 200px;
+            box-shadow: var(--shadow);
+        }
+
+        .stat-card h3 {
+            margin: 0 0 10px 0;
+            font-size: 1.1rem;
+        }
+
+        .stat-card .value {
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+
+        .charts-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .chart-box {
+            background-color: var(--bg-card);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .chart-box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .chart-title {
+            text-align: center;
+            color: var(--accent);
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 10px;
+        }
+
+        .analysis {
+            background: var(--accent-light);
+            padding: 25px;
+            border-radius: 10px;
+            margin-top: 30px;
+            line-height: 1.7;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .analysis h2 {
+            color: var(--accent);
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1.6rem;
+        }
+
+        .highlight {
+            background-color: var(--highlight);
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            color: var(--highlight-text);
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            border-top: 1px solid var(--border);
+            margin-top: 30px;
+        }
+
+        /* مودال ورود */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: var(--bg-secondary);
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            text-align: center;
+            color: var(--text-primary);
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 1rem;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1rem;
+            flex: 1;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background-color: var(--accent);
+            color: white;
+        }
+
+        .btn-secondary {
+            background-color: var(--border);
+            color: var(--text-primary);
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+
+        /* بخش مدیریت */
+        .admin-section {
+            background: var(--bg-card);
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: var(--shadow);
+            margin-bottom: 30px;
+            display: none;
+        }
+
+        .admin-title {
+            font-size: 1.4rem;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .admin-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: var(--text-primary);
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+        }
+
+        .admin-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            grid-column: 1 / -1;
+        }
+
+        @media (max-width: 768px) {
+            .charts-container {
+                grid-template-columns: 1fr;
+            }
+            .chart-box {
+                padding: 15px;
+            }
+            .controls {
+                flex-direction: column;
+                align-items: center;
+            }
+            .region-selector {
+                width: 100%;
+                max-width: 300px;
+            }
+            .header-controls {
+                position: static;
+                transform: none;
+                justify-content: center;
+                margin-top: 15px;
+            }
+            .admin-form {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-controls">
+                <button class="theme-toggle" id="themeToggle">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <button class="admin-toggle" id="adminToggle">
+                    <i class="fas fa-lock"></i>
+                </button>
+            </div>
+            <h1><i class="fas fa-tree"></i> تحلیل سرانه فضای سبز شهر شیراز</h1>
+            <div class="subtitle">سازمان سیما، منظر و فضای سبز شهری</div>
+        </header>
+        
+        <div class="content">
+            <div class="controls">
+                <select id="regionSelect" class="region-selector">
+                    <option value="all">همه مناطق</option>
+                    <!-- مناطق با JavaScript پر خواهند شد -->
+                </select>
+                <div class="stat-card">
+                    <h3>میانگین سرانه عمومی</h3>
+                    <div class="value" id="avgPublic">11.48</div>
+                    <div>متر مربع</div>
+                </div>
+                <div class="stat-card">
+                    <h3>میانگین سرانه شهری</h3>
+                    <div class="value" id="avgUrban">24.88</div>
+                    <div>متر مربع</div>
+                </div>
+            </div>
+
+            <div class="charts-container">
+                <div class="chart-box">
+                    <div class="chart-title">مقایسه سرانه فضای سبز مناطق</div>
+                    <canvas id="perCapitaChart"></canvas>
+                </div>
+                <div class="chart-box">
+                    <div class="chart-title">مقایسه مساحت منطقه و فضای سبز</div>
+                    <canvas id="areaComparisonChart"></canvas>
+                </div>
+                <div class="chart-box">
+                    <div class="chart-title">جمعیت و فضای سبز عمومی</div>
+                    <canvas id="populationChart"></canvas>
+                </div>
+                <div class="chart-box">
+                    <div class="chart-title">درصد فضای سبز از مساحت منطقه</div>
+                    <canvas id="greenSpaceRatioChart"></canvas>
+                </div>
+                <div class="chart-box">
+                    <div class="chart-title">نمودار حبابی: جمعیت، مساحت و فضای سبز</div>
+                    <canvas id="bubbleChart"></canvas>
+                </div>
+                <div class="chart-box">
+                    <div class="chart-title">پراکندگی سرانه فضای سبز</div>
+                    <canvas id="scatterChart"></canvas>
+                </div>
+            </div>
+
+            <div class="analysis">
+                <h2><i class="fas fa-chart-line"></i> تحلیل داده‌ها</h2>
+                <div id="analysisText"></div>
+            </div>
+            
+            <!-- بخش مدیریت -->
+            <div class="admin-section" id="adminSection">
+                <h2 class="admin-title"><i class="fas fa-cog"></i> بخش مدیریت داده‌ها</h2>
+                <form class="admin-form" id="adminForm">
+                    <div class="form-group">
+                        <label for="admin-region">منطقه</label>
+                        <select id="admin-region" class="region-selector">
+                            <option value="all">همه مناطق</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="admin-area">مساحت منطقه (متر مربع)</label>
+                        <input type="number" id="admin-area">
+                    </div>
+                    <div class="form-group">
+                        <label for="admin-population">جمعیت</label>
+                        <input type="number" id="admin-population">
+                    </div>
+                    <div class="form-group">
+                        <label for="admin-public-green">فضای سبز عمومی (متر مربع)</label>
+                        <input type="number" id="admin-public-green">
+                    </div>
+                    <div class="form-group">
+                        <label for="admin-urban-green">فضای سبز شهری (متر مربع)</label>
+                        <input type="number" id="admin-urban-green">
+                    </div>
+                    <div class="form-group">
+                        <label for="admin-per-capita-public">سرانه عمومی (متر مربع)</label>
+                        <input type="number" id="admin-per-capita-public" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label for="admin-per-capita-urban">سرانه شهری (متر مربع)</label>
+                        <input type="number" id="admin-per-capita-urban" step="0.01">
+                    </div>
+                    <div class="admin-buttons">
+                        <button type="button" class="btn btn-primary" id="saveData">ذخیره تغییرات</button>
+                        <button type="button" class="btn btn-secondary" id="resetData">بازنشانی داده‌ها</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="footer">
+                <p>تحلیل داده‌های سرانه فضای سبز شهر شیراز - سال ۱۴۰۳</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- مودال ورود -->
+    <div class="modal" id="loginModal">
+        <div class="modal-content">
+            <h2 class="modal-title"><i class="fas fa-lock"></i> ورود به بخش مدیریت</h2>
+            <div class="input-group">
+                <label for="password">رمز عبور</label>
+                <input type="password" id="password" placeholder="رمز عبور را وارد کنید">
+            </div>
+            <div class="modal-buttons">
+                <button class="btn btn-primary" id="loginBtn">ورود</button>
+                <button class="btn btn-secondary" id="cancelLogin">انصراف</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // داده‌های جدول
+        let data = [
+            { region: "منطقه 1", area: 41128105, population: 142373, publicGreen: 1639288, urbanGreen: 2298188, perCapitaPublic: 11.51, perCapitaUrban: 16.14 },
+            { region: "منطقه 2", area: 47256757, population: 147017, publicGreen: 1324552, urbanGreen: 1324552, perCapitaPublic: 9.01, perCapitaUrban: 9.01 },
+            { region: "منطقه 3", area: 32465134, population: 134287, publicGreen: 1196026, urbanGreen: 8497026, perCapitaPublic: 8.91, perCapitaUrban: 63.28 },
+            { region: "منطقه 4", area: 28636491, population: 322180, publicGreen: 2515825, urbanGreen: 3235825, perCapitaPublic: 7.81, perCapitaUrban: 10.04 },
+            { region: "منطقه 5", area: 17035717, population: 160276, publicGreen: 2091079, urbanGreen: 2091079, perCapitaPublic: 13.05, perCapitaUrban: 13.05 },
+            { region: "منطقه 6", area: 51481555, population: 125603, publicGreen: 1772292, urbanGreen: 5585042, perCapitaPublic: 14.11, perCapitaUrban: 44.47 },
+            { region: "منطقه 7", area: 43371421, population: 146460, publicGreen: 1251796, urbanGreen: 2331796, perCapitaPublic: 8.55, perCapitaUrban: 15.92 },
+            { region: "منطقه 8", area: 3779569, population: 18638, publicGreen: 251343, urbanGreen: 251343, perCapitaPublic: 13.49, perCapitaUrban: 13.49 },
+            { region: "منطقه 9", area: 58981479, population: 225577, publicGreen: 1610404, urbanGreen: 6360404, perCapitaPublic: 7.14, perCapitaUrban: 28.20 },
+            { region: "منطقه 10", area: 183739868, population: 228271, publicGreen: 5244064, urbanGreen: 10364064, perCapitaPublic: 22.97, perCapitaUrban: 45.40 },
+            { region: "منطقه 11", area: 14965266, population: 98639, publicGreen: 1191630, urbanGreen: 1191630, perCapitaPublic: 12.08, perCapitaUrban: 12.08 }
+        ];
+
+        // متغیرهای جهانی برای نمودارها
+        let perCapitaChart, areaComparisonChart, populationChart, greenSpaceRatioChart, bubbleChart, scatterChart;
+        let selectedRegion = "all";
+
+        // فرمت اعداد برای نمایش در جدول
+        function formatNumber(num) {
+            return new Intl.NumberFormat('fa-IR').format(num);
+        }
+
+        // پر کردن dropdown مناطق
+        function populateRegionSelector() {
+            const selector = document.getElementById('regionSelect');
+            const adminSelector = document.getElementById('admin-region');
+            
+            // پاک کردن گزینه‌های قبلی (به جز "همه مناطق")
+            while (selector.children.length > 1) {
+                selector.removeChild(selector.lastChild);
+            }
+            while (adminSelector.children.length > 1) {
+                adminSelector.removeChild(adminSelector.lastChild);
+            }
+            
+            data.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item.region;
+                option.textContent = item.region;
+                selector.appendChild(option);
+                
+                const adminOption = document.createElement('option');
+                adminOption.value = item.region;
+                adminOption.textContent = item.region;
+                adminSelector.appendChild(adminOption);
+            });
+        }
+
+        // نمودار سرانه فضای سبز
+        function createPerCapitaChart() {
+            const ctx = document.getElementById('perCapitaChart').getContext('2d');
+            
+            let regions, perCapitaPublic, perCapitaUrban;
+            
+            if (selectedRegion === "all") {
+                regions = data.map(item => item.region);
+                perCapitaPublic = data.map(item => item.perCapitaPublic);
+                perCapitaUrban = data.map(item => item.perCapitaUrban);
+            } else {
+                const regionData = data.find(item => item.region === selectedRegion);
+                regions = [regionData.region];
+                perCapitaPublic = [regionData.perCapitaPublic];
+                perCapitaUrban = [regionData.perCapitaUrban];
+            }
+            
+            if (perCapitaChart) {
+                perCapitaChart.destroy();
+            }
+            
+            perCapitaChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: regions,
+                    datasets: [
+                        {
+                            label: 'سرانه عمومی',
+                            data: perCapitaPublic,
+                            backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'سرانه شهری با ارتفاعات',
+                            data: perCapitaUrban,
+                            backgroundColor: 'rgba(75, 192, 192, 0.7)',
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: selectedRegion === "all" ? 'سرانه فضای سبز تمام مناطق' : `سرانه فضای سبز ${selectedRegion}`,
+                            font: { size: 16 }
+                        },
+                        legend: {
+                            position: 'top',
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'متر مربع'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // نمودار مقایسه مساحت منطقه و فضای سبز
+        function createAreaComparisonChart() {
+            const ctx = document.getElementById('areaComparisonChart').getContext('2d');
+            
+            let regions, area, urbanGreen;
+            
+            if (selectedRegion === "all") {
+                regions = data.map(item => item.region);
+                area = data.map(item => item.area / 1000000); // تبدیل به کیلومتر مربع
+                urbanGreen = data.map(item => item.urbanGreen / 1000000); // تبدیل به کیلومتر مربع
+            } else {
+                const regionData = data.find(item => item.region === selectedRegion);
+                regions = [regionData.region];
+                area = [regionData.area / 1000000];
+                urbanGreen = [regionData.urbanGreen / 1000000];
+            }
+            
+            if (areaComparisonChart) {
+                areaComparisonChart.destroy();
+            }
+            
+            areaComparisonChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: regions,
+                    datasets: [
+                        {
+                            label: 'مساحت منطقه (کیلومتر مربع)',
+                            data: area,
+                            backgroundColor: 'rgba(255, 99, 132, 0.7)',
+                            borderColor: 'rgba(255, 99, 132, 1)',
+                            borderWidth: 1,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'مساحت فضای سبز شهری (کیلومتر مربع)',
+                            data: urbanGreen,
+                            backgroundColor: 'rgba(153, 102, 255, 0.7)',
+                            borderColor: 'rgba(153, 102, 255, 1)',
+                            borderWidth: 1,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: selectedRegion === "all" ? 'مقایسه مساحت منطقه و فضای سبز شهری' : `مساحت و فضای سبز ${selectedRegion}`,
+                            font: { size: 16 }
+                        },
+                        legend: {
+                            position: 'top',
+                        }
+                    },
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: 'مساحت منطقه (کیلومتر مربع)'
+                            }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: 'فضای سبز شهری (کیلومتر مربع)'
+                            },
+                            grid: {
+                                drawOnChartArea: false,
+                            },
+                        }
+                    }
+                }
+            });
+        }
+
+        // نمودار جمعیت و فضای سبز عمومی
+        function createPopulationChart() {
+            const ctx = document.getElementById('populationChart').getContext('2d');
+            
+            let regions, population, publicGreen;
+            
+            if (selectedRegion === "all") {
+                regions = data.map(item => item.region);
+                population = data.map(item => item.population / 1000); // تبدیل به هزار نفر
+                publicGreen = data.map(item => item.publicGreen / 10000); // تبدیل به هکتار
+            } else {
+                const regionData = data.find(item => item.region === selectedRegion);
+                regions = [regionData.region];
+                population = [regionData.population / 1000];
+                publicGreen = [regionData.publicGreen / 10000];
+            }
+            
+            if (populationChart) {
+                populationChart.destroy();
+            }
+            
+            populationChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: regions,
+                    datasets: [
+                        {
+                            label: 'جمعیت (هزار نفر)',
+                            data: population,
+                            backgroundColor: 'rgba(255, 159, 64, 0.7)',
+                            borderColor: 'rgba(255, 159, 64, 1)',
+                            borderWidth: 1,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'فضای سبز عمومی (هکتار)',
+                            data: publicGreen,
+                            backgroundColor: 'rgba(75, 192, 192, 0.7)',
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            borderWidth: 1,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: selectedRegion === "all" ? 'مقایسه جمعیت و فضای سبز عمومی' : `جمعیت و فضای سبز ${selectedRegion}`,
+                            font: { size: 16 }
+                        },
+                        legend: {
+                            position: 'top',
+                        }
+                    },
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: 'جمعیت (هزار نفر)'
+                            }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: 'فضای سبز عمومی (هکتار)'
+                            },
+                            grid: {
+                                drawOnChartArea: false,
+                            },
+                        }
+                    }
+                }
+            });
+        }
+
+        // نمودار نسبت فضای سبز به مساحت منطقه
+        function createGreenSpaceRatioChart() {
+            const ctx = document.getElementById('greenSpaceRatioChart').getContext('2d');
+            
+            let regions, greenSpaceRatio;
+            
+            if (selectedRegion === "all") {
+                regions = data.map(item => item.region);
+                greenSpaceRatio = data.map(item => (item.urbanGreen / item.area) * 100);
+            } else {
+                const regionData = data.find(item => item.region === selectedRegion);
+                regions = [regionData.region];
+                greenSpaceRatio = [(regionData.urbanGreen / regionData.area) * 100];
+            }
+            
+            if (greenSpaceRatioChart) {
+                greenSpaceRatioChart.destroy();
+            }
+            
+            greenSpaceRatioChart = new Chart(ctx, {
+                type: selectedRegion === "all" ? 'bar' : 'doughnut',
+                data: selectedRegion === "all" ? {
+                    labels: regions,
+                    datasets: [{
+                        label: 'درصد فضای سبز از مساحت منطقه',
+                        data: greenSpaceRatio,
+                        backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }]
+                } : {
+                    labels: ['فضای سبز', 'سایر مساحت'],
+                    datasets: [{
+                        data: [greenSpaceRatio[0], 100 - greenSpaceRatio[0]],
+                        backgroundColor: ['rgba(75, 192, 192, 0.7)', 'rgba(201, 203, 207, 0.7)'],
+                        borderColor: ['rgba(75, 192, 192, 1)', 'rgba(201, 203, 207, 1)'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: selectedRegion === "all" ? 'درصد فضای سبز شهری از کل مساحت منطقه' : `نسبت فضای سبز ${selectedRegion}`,
+                            font: { size: 16 }
+                        }
+                    },
+                    scales: selectedRegion === "all" ? {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'درصد'
+                            }
+                        }
+                    } : {}
+                }
+            });
+        }
+
+        // نمودار حبابی: جمعیت، مساحت و فضای سبز
+        function createBubbleChart() {
+            const ctx = document.getElementById('bubbleChart').getContext('2d');
+            
+            let chartData;
+            
+            if (selectedRegion === "all") {
+                chartData = data.map(item => ({
+                    x: item.population / 1000, // جمعیت به هزار نفر
+                    y: item.area / 1000000, // مساحت به کیلومتر مربع
+                    r: Math.sqrt(item.urbanGreen) / 200, // اندازه حباب بر اساس فضای سبز
+                    label: item.region
+                }));
+            } else {
+                const regionData = data.find(item => item.region === selectedRegion);
+                chartData = [{
+                    x: regionData.population / 1000,
+                    y: regionData.area / 1000000,
+                    r: Math.sqrt(regionData.urbanGreen) / 200,
+                    label: regionData.region
+                }];
+            }
+            
+            if (bubbleChart) {
+                bubbleChart.destroy();
+            }
+            
+            bubbleChart = new Chart(ctx, {
+                type: 'bubble',
+                data: {
+                    datasets: [{
+                        label: 'مناطق',
+                        data: chartData,
+                        backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: selectedRegion === "all" ? 'رابطه جمعیت، مساحت و فضای سبز' : `منطقه ${selectedRegion}`,
+                            font: { size: 16 }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const data = context.raw;
+                                    return `${data.label}: جمعیت: ${data.x} هزار نفر، مساحت: ${data.y.toFixed(1)} کیلومتر مربع`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'جمعیت (هزار نفر)'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'مساحت منطقه (کیلومتر مربع)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // نمودار پراکندگی سرانه فضای سبز
+        function createScatterChart() {
+            const ctx = document.getElementById('scatterChart').getContext('2d');
+            
+            let chartData;
+            
+            if (selectedRegion === "all") {
+                chartData = data.map(item => ({
+                    x: item.perCapitaPublic,
+                    y: item.perCapitaUrban,
+                    label: item.region
+                }));
+            } else {
+                const regionData = data.find(item => item.region === selectedRegion);
+                chartData = [{
+                    x: regionData.perCapitaPublic,
+                    y: regionData.perCapitaUrban,
+                    label: regionData.region
+                }];
+            }
+            
+            if (scatterChart) {
+                scatterChart.destroy();
+            }
+            
+            scatterChart = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'مناطق',
+                        data: chartData,
+                        backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1,
+                        pointRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: selectedRegion === "all" ? 'رابطه سرانه عمومی و سرانه شهری' : `منطقه ${selectedRegion}`,
+                            font: { size: 16 }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const data = context.raw;
+                                    return `${data.label}: عمومی: ${data.x} متر مربع، شهری: ${data.y} متر مربع`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'سرانه فضای سبز عمومی (متر مربع)'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'سرانه فضای سبز شهری (متر مربع)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // تحلیل داده‌ها
+        function generateAnalysis() {
+            const analysisText = document.getElementById('analysisText');
+            
+            if (selectedRegion === "all") {
+                // تحلیل کلی
+                const totalPopulation = data.reduce((sum, item) => sum + item.population, 0);
+                const totalArea = data.reduce((sum, item) => sum + item.area, 0);
+                const totalPublicGreen = data.reduce((sum, item) => sum + item.publicGreen, 0);
+                const totalUrbanGreen = data.reduce((sum, item) => sum + item.urbanGreen, 0);
+                
+                const avgPerCapitaPublic = data.reduce((sum, item) => sum + item.perCapitaPublic, 0) / data.length;
+                const avgPerCapitaUrban = data.reduce((sum, item) => sum + item.perCapitaUrban, 0) / data.length;
+                
+                // به‌روزرسانی مقادیر میانگین
+                document.getElementById('avgPublic').textContent = avgPerCapitaPublic.toFixed(2);
+                document.getElementById('avgUrban').textContent = avgPerCapitaUrban.toFixed(2);
+                
+                // یافتن مناطق با بیشترین و کمترین سرانه
+                const maxPublicPerCapita = Math.max(...data.map(item => item.perCapitaPublic));
+                const minPublicPerCapita = Math.min(...data.map(item => item.perCapitaPublic));
+                const maxUrbanPerCapita = Math.max(...data.map(item => item.perCapitaUrban));
+                const minUrbanPerCapita = Math.min(...data.map(item => item.perCapitaUrban));
+                
+                const regionWithMaxPublic = data.find(item => item.perCapitaPublic === maxPublicPerCapita).region;
+                const regionWithMinPublic = data.find(item => item.perCapitaPublic === minPublicPerCapita).region;
+                const regionWithMaxUrban = data.find(item => item.perCapitaUrban === maxUrbanPerCapita).region;
+                const regionWithMinUrban = data.find(item => item.perCapitaUrban === minUrbanPerCapita).region;
+                
+                // محاسبه درصد فضای سبز از مساحت کل
+                const greenSpacePercentage = (totalUrbanGreen / totalArea) * 100;
+                
+                let analysis = `
+                    <p>بر اساس داده‌های جدول، تحلیل‌های زیر برای کل شهر شیراز قابل استخراج است:</p>
+                    <ul>
+                        <li>منطقه <span class="highlight">${regionWithMaxPublic}</span> با ${maxPublicPerCapita} متر مربع، بیشترین سرانه فضای سبز عمومی را دارد.</li>
+                        <li>منطقه <span class="highlight">${regionWithMinPublic}</span> با ${minPublicPerCapita} متر مربع، کمترین سرانه فضای سبز عمومی را دارد.</li>
+                        <li>منطقه <span class="highlight">${regionWithMaxUrban}</span> با ${maxUrbanPerCapita} متر مربع، بیشترین سرانه فضای سبز شهری (با احتساب ارتفاعات) را دارد.</li>
+                        <li>منطقه <span class="highlight">${regionWithMinUrban}</span> با ${minUrbanPerCapita} متر مربع، کمترین سرانه فضای سبز شهری را دارد.</li>
+                        <li>میانگین سرانه فضای سبز عمومی در مناطق ${avgPerCapitaPublic.toFixed(2)} متر مربع است.</li>
+                        <li>میانگین سرانه فضای سبز شهری در مناطق ${avgPerCapitaUrban.toFixed(2)} متر مربع است.</li>
+                        <li>فضای سبز شهری ${greenSpacePercentage.toFixed(2)}% از کل مساحت شهر را تشکیل می‌دهد.</li>
+                        <li>تفاوت قابل توجهی بین سرانه فضای سبز عمومی و شهری در برخی مناطق (مانند منطقه 3 و 6) مشاهده می‌شود که نشان‌دهنده تأثیر ارتفاعات پیرامونی است.</li>
+                        <li>منطقه 10 با وجود مساحت بسیار زیاد، سرانه فضای سبز عمومی و شهری بالایی دارد که نشان از توزیع مناسب فضای سبز در این منطقه است.</li>
+                    </ul>
+                `;
+                
+                analysisText.innerHTML = analysis;
+            } else {
+                // تحلیل منطقه خاص
+                const regionData = data.find(item => item.region === selectedRegion);
+                const greenSpacePercentage = (regionData.urbanGreen / regionData.area) * 100;
+                const publicToUrbanRatio = (regionData.publicGreen / regionData.urbanGreen) * 100;
+                
+                let analysis = `
+                    <p>تحلیل داده‌های <span class="highlight">${selectedRegion}</span>:</p>
+                    <ul>
+                        <li>سرانه فضای سبز عمومی در این منطقه <span class="highlight">${regionData.perCapitaPublic}</span> متر مربع است.</li>
+                        <li>سرانه فضای سبز شهری (با احتساب ارتفاعات) <span class="highlight">${regionData.perCapitaUrban}</span> متر مربع است.</li>
+                        <li>فضای سبز شهری <span class="highlight">${greenSpacePercentage.toFixed(2)}%</span> از مساحت این منطقه را تشکیل می‌دهد.</li>
+                        <li>فضای سبز عمومی <span class="highlight">${publicToUrbanRatio.toFixed(2)}%</span> از کل فضای سبز شهری این منطقه را شامل می‌شود.</li>
+                        <li>این منطقه دارای <span class="highlight">${formatNumber(regionData.population)}</span> نفر جمعیت و <span class="highlight">${formatNumber(regionData.area)}</span> متر مربع مساحت است.</li>
+                    </ul>
+                `;
+                
+                // مقایسه با میانگین شهر
+                const avgPerCapitaPublic = data.reduce((sum, item) => sum + item.perCapitaPublic, 0) / data.length;
+                const avgPerCapitaUrban = data.reduce((sum, item) => sum + item.perCapitaUrban, 0) / data.length;
+                
+                const publicComparison = regionData.perCapitaPublic > avgPerCapitaPublic ? "بالاتر" : "پایین‌تر";
+                const urbanComparison = regionData.perCapitaUrban > avgPerCapitaUrban ? "بالاتر" : "پایین‌تر";
+                
+                analysis += `
+                    <p>مقایسه با میانگین شهر:</p>
+                    <ul>
+                        <li>سرانه فضای سبز عمومی این منطقه <span class="highlight">${publicComparison}</span> از میانگین شهر (${avgPerCapitaPublic.toFixed(2)} متر مربع) است.</li>
+                        <li>سرانه فضای سبز شهری این منطقه <span class="highlight">${urbanComparison}</span> از میانگین شهر (${avgPerCapitaUrban.toFixed(2)} متر مربع) است.</li>
+                    </ul>
+                `;
+                
+                analysisText.innerHTML = analysis;
+            }
+        }
+
+        // پر کردن فرم مدیریت با داده‌های فعلی
+        function populateAdminForm() {
+            const adminRegion = document.getElementById('admin-region').value;
+            
+            if (adminRegion === "all") {
+                // پاک کردن فرم
+                document.getElementById('admin-area').value = '';
+                document.getElementById('admin-population').value = '';
+                document.getElementById('admin-public-green').value = '';
+                document.getElementById('admin-urban-green').value = '';
+                document.getElementById('admin-per-capita-public').value = '';
+                document.getElementById('admin-per-capita-urban').value = '';
+            } else {
+                const regionData = data.find(item => item.region === adminRegion);
+                document.getElementById('admin-area').value = regionData.area;
+                document.getElementById('admin-population').value = regionData.population;
+                document.getElementById('admin-public-green').value = regionData.publicGreen;
+                document.getElementById('admin-urban-green').value = regionData.urbanGreen;
+                document.getElementById('admin-per-capita-public').value = regionData.perCapitaPublic;
+                document.getElementById('admin-per-capita-urban').value = regionData.perCapitaUrban;
+            }
+        }
+
+        // ذخیره داده‌های فرم مدیریت
+        function saveAdminData() {
+            const adminRegion = document.getElementById('admin-region').value;
+            
+            if (adminRegion === "all") {
+                alert('لطفاً یک منطقه خاص را برای ویرایش انتخاب کنید.');
+                return;
+            }
+            
+            const regionIndex = data.findIndex(item => item.region === adminRegion);
+            
+            data[regionIndex].area = parseInt(document.getElementById('admin-area').value);
+            data[regionIndex].population = parseInt(document.getElementById('admin-population').value);
+            data[regionIndex].publicGreen = parseInt(document.getElementById('admin-public-green').value);
+            data[regionIndex].urbanGreen = parseInt(document.getElementById('admin-urban-green').value);
+            data[regionIndex].perCapitaPublic = parseFloat(document.getElementById('admin-per-capita-public').value);
+            data[regionIndex].perCapitaUrban = parseFloat(document.getElementById('admin-per-capita-urban').value);
+            
+            updateAllCharts();
+            
+            alert('تغییرات با موفقیت ذخیره شدند.');
+        }
+
+        // بازنشانی داده‌ها به مقادیر اولیه
+        function resetData() {
+            data = [
+                { region: "منطقه 1", area: 41128105, population: 142373, publicGreen: 1639288, urbanGreen: 2298188, perCapitaPublic: 11.51, perCapitaUrban: 16.14 },
+                { region: "منطقه 2", area: 47256757, population: 147017, publicGreen: 1324552, urbanGreen: 1324552, perCapitaPublic: 9.01, perCapitaUrban: 9.01 },
+                { region: "منطقه 3", area: 32465134, population: 134287, publicGreen: 1196026, urbanGreen: 8497026, perCapitaPublic: 8.91, perCapitaUrban: 63.28 },
+                { region: "منطقه 4", area: 28636491, population: 322180, publicGreen: 2515825, urbanGreen: 3235825, perCapitaPublic: 7.81, perCapitaUrban: 10.04 },
+                { region: "منطقه 5", area: 17035717, population: 160276, publicGreen: 2091079, urbanGreen: 2091079, perCapitaPublic: 13.05, perCapitaUrban: 13.05 },
+                { region: "منطقه 6", area: 51481555, population: 125603, publicGreen: 1772292, urbanGreen: 5585042, perCapitaPublic: 14.11, perCapitaUrban: 44.47 },
+                { region: "منطقه 7", area: 43371421, population: 146460, publicGreen: 1251796, urbanGreen: 2331796, perCapitaPublic: 8.55, perCapitaUrban: 15.92 },
+                { region: "منطقه 8", area: 3779569, population: 18638, publicGreen: 251343, urbanGreen: 251343, perCapitaPublic: 13.49, perCapitaUrban: 13.49 },
+                { region: "منطقه 9", area: 58981479, population: 225577, publicGreen: 1610404, urbanGreen: 6360404, perCapitaPublic: 7.14, perCapitaUrban: 28.20 },
+                { region: "منطقه 10", area: 183739868, population: 228271, publicGreen: 5244064, urbanGreen: 10364064, perCapitaPublic: 22.97, perCapitaUrban: 45.40 },
+                { region: "منطقه 11", area: 14965266, population: 98639, publicGreen: 1191630, urbanGreen: 1191630, perCapitaPublic: 12.08, perCapitaUrban: 12.08 }
+            ];
+            
+            populateRegionSelector();
+            updateAllCharts();
+            populateAdminForm();
+            
+            alert('داده‌ها به مقادیر اولیه بازنشانی شدند.');
+        }
+
+        // به‌روزرسانی تمام نمودارها و تحلیل
+        function updateAllCharts() {
+            createPerCapitaChart();
+            createAreaComparisonChart();
+            createPopulationChart();
+            createGreenSpaceRatioChart();
+            createBubbleChart();
+            createScatterChart();
+            generateAnalysis();
+        }
+
+        // راه‌اندازی تمام توابع پس از بارگذاری صفحه
+        document.addEventListener('DOMContentLoaded', function() {
+            populateRegionSelector();
+            updateAllCharts();
+            
+            // افزودن event listener برای تغییر منطقه
+            document.getElementById('regionSelect').addEventListener('change', function() {
+                selectedRegion = this.value;
+                updateAllCharts();
+            });
+            
+            // کنترل تم
+            const themeToggle = document.getElementById('themeToggle');
+            const body = document.body;
+            
+            themeToggle.addEventListener('click', () => {
+                body.classList.toggle('dark-theme');
+                if (body.classList.contains('dark-theme')) {
+                    themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+                    localStorage.setItem('theme', 'dark');
+                } else {
+                    themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+                    localStorage.setItem('theme', 'light');
+                }
+            });
+            
+            // بارگذاری تم ذخیره شده
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') {
+                body.classList.add('dark-theme');
+                themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+            }
+            
+            // کنترل بخش مدیریت
+            const adminToggle = document.getElementById('adminToggle');
+            const loginModal = document.getElementById('loginModal');
+            const adminSection = document.getElementById('adminSection');
+            const loginBtn = document.getElementById('loginBtn');
+            const cancelLogin = document.getElementById('cancelLogin');
+            const saveDataBtn = document.getElementById('saveData');
+            const resetDataBtn = document.getElementById('resetData');
+            const passwordInput = document.getElementById('password');
+            const adminRegionSelect = document.getElementById('admin-region');
+            
+            adminToggle.addEventListener('click', () => {
+                loginModal.style.display = 'flex';
+            });
+            
+            cancelLogin.addEventListener('click', () => {
+                loginModal.style.display = 'none';
+                passwordInput.value = '';
+            });
+            
+            loginBtn.addEventListener('click', () => {
+                if (passwordInput.value === '123456') {
+                    loginModal.style.display = 'none';
+                    adminSection.style.display = 'block';
+                    populateAdminForm();
+                    passwordInput.value = '';
+                } else {
+                    alert('رمز عبور اشتباه است!');
+                }
+            });
+            
+            adminRegionSelect.addEventListener('change', populateAdminForm);
+            saveDataBtn.addEventListener('click', saveAdminData);
+            resetDataBtn.addEventListener('click', resetData);
+        });
+    </script>
+</body>
+</html>

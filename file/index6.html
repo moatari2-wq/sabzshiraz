@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تحلیل باغ‌های مخصوص بانوان شیراز</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-bg: #ffffff;
+            --secondary-bg: #f2f2f7;
+            --tertiary-bg: #e5e5ea;
+            --card-bg: #ffffff;
+            --text-primary: #000000;
+            --text-secondary: #3c3c43;
+            --text-tertiary: #8e8e93;
+            --accent-color: #9c27b0;
+            --accent-light: rgba(156, 39, 176, 0.1);
+            --border-color: #c6c6c8;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --gradient-start: #f3e5f5;
+            --gradient-end: #e1bee7;
+        }
+
+        [data-theme="dark"] {
+            --primary-bg: #000000;
+            --secondary-bg: #1c1c1e;
+            --tertiary-bg: #2c2c2e;
+            --card-bg: #1c1c1e;
+            --text-primary: #ffffff;
+            --text-secondary: #ebebf5;
+            --text-tertiary: #98989d;
+            --accent-color: #ba68c8;
+            --accent-light: rgba(186, 104, 200, 0.2);
+            --border-color: #38383a;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            --gradient-start: #2c0030;
+            --gradient-end: #4a0072;
+        }
+
+        * {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Tahoma, sans-serif;
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        body {
+            background-color: var(--primary-bg);
+            color: var(--text-primary);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 20px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        h1 {
+            color: var(--text-primary);
+            margin-bottom: 10px;
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            margin-bottom: 20px;
+        }
+
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: var(--shadow);
+            z-index: 100;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        .region-selector {
+            padding: 12px 16px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            background-color: var(--card-bg);
+            font-size: 1rem;
+            color: var(--text-primary);
+            cursor: pointer;
+            min-width: 180px;
+            box-shadow: var(--shadow);
+        }
+
+        .stats-highlights {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            color: var(--text-primary);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            flex: 1;
+            min-width: 180px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+        }
+
+        .stat-card h3 {
+            margin: 0 0 10px 0;
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .stat-card .value {
+            font-size: 1.6rem;
+            font-weight: 600;
+        }
+
+        .charts-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .chart-box {
+            background-color: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            transition: transform 0.3s ease;
+        }
+
+        .chart-box:hover {
+            transform: translateY(-5px);
+        }
+
+        .chart-title {
+            text-align: center;
+            color: var(--text-primary);
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        .gardens-list {
+            background: var(--secondary-bg);
+            padding: 25px;
+            border-radius: 12px;
+            margin-top: 30px;
+            line-height: 1.7;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+        }
+
+        .gardens-list h2 {
+            color: var(--text-primary);
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1.4rem;
+            font-weight: 600;
+        }
+
+        .garden-item {
+            background: var(--card-bg);
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow);
+        }
+
+        .garden-name {
+            font-weight: 600;
+            color: var(--accent-color);
+            margin-bottom: 5px;
+        }
+
+        .garden-address {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .highlight {
+            background-color: var(--accent-light);
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-weight: 500;
+            color: var(--accent-color);
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+            color: var(--text-tertiary);
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .charts-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .chart-box {
+                padding: 15px;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .region-selector {
+                width: 100%;
+                max-width: 300px;
+            }
+            
+            .stats-highlights {
+                flex-direction: column;
+            }
+            
+            .stat-card {
+                min-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="theme-toggle" id="themeToggle">
+        <i class="fas fa-moon"></i>
+    </button>
+
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-female"></i> تحلیل باغ‌های مخصوص بانوان شیراز</h1>
+            <div class="subtitle">بررسی و تحلیل توزیع باغ‌های مخصوص بانوان در مناطق مختلف شیراز</div>
+        </header>
+
+        <div class="controls">
+            <select id="regionSelect" class="region-selector">
+                <option value="all">همه مناطق</option>
+            </select>
+            <div class="stat-card">
+                <h3>تعداد کل باغ‌های بانوان</h3>
+                <div class="value" id="totalGardens">9</div>
+                <div>باغ</div>
+            </div>
+            <div class="stat-card">
+                <h3>تعداد مناطق دارای باغ</h3>
+                <div class="value" id="regionsWithGardens">7</div>
+                <div>منطقه</div>
+            </div>
+            <div class="stat-card">
+                <h3>منطقه با بیشترین باغ</h3>
+                <div class="value" id="maxGardensRegion">منطقه 5</div>
+            </div>
+        </div>
+
+        <div class="charts-container">
+            <div class="chart-box">
+                <div class="chart-title">تعداد باغ‌های بانوان در هر منطقه</div>
+                <canvas id="gardensByRegionChart"></canvas>
+            </div>
+            <div class="chart-box">
+                <div class="chart-title">توزیع باغ‌های بانوان بین مناطق</div>
+                <canvas id="gardensDistributionChart"></canvas>
+            </div>
+            <div class="chart-box">
+                <div class="chart-title">نمودار وضعیت احداث باغ‌ها</div>
+                <canvas id="statusChart"></canvas>
+            </div>
+            <div class="chart-box">
+                <div class="chart-title">پراکندگی جغرافیایی باغ‌های بانوان</div>
+                <canvas id="mapChart"></canvas>
+            </div>
+        </div>
+
+        <div class="gardens-list">
+            <h2><i class="fas fa-list"></i> فهرست باغ‌های بانوان</h2>
+            <div id="gardensList"></div>
+        </div>
+
+        <div class="footer">
+            <p>تحلیل داده‌های باغ‌های مخصوص بانوان شهر شیراز - سال ۱۴۰۳</p>
+        </div>
+    </div>
+
+    <script>
+        // مدیریت تم
+        const themeToggle = document.getElementById('themeToggle');
+        const body = document.body;
+        
+        // بررسی ذخیره‌سازی تم
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        body.setAttribute('data-theme', savedTheme);
+        updateThemeIcon(savedTheme);
+        
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = body.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            body.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon(newTheme);
+        });
+        
+        function updateThemeIcon(theme) {
+            const icon = themeToggle.querySelector('i');
+            if (theme === 'dark') {
+                icon.className = 'fas fa-sun';
+            } else {
+                icon.className = 'fas fa-moon';
+            }
+        }
+
+        // داده‌های باغ‌های مخصوص بانوان شیراز
+        const gardensData = [
+            { 
+                region: "منطقه 2", 
+                name: "باغ بانوان", 
+                address: "واقع در بوستان صنوبر",
+                status: "فعال"
+            },
+            { 
+                region: "منطقه 4", 
+                name: "باغ بانوان", 
+                address: "بلوار مطهری جنوبی",
+                status: "فعال"
+            },
+            { 
+                region: "منطقه 5", 
+                name: "بوستان مهربانو یک", 
+                address: "بلوار دولت شرقی، جنب پارک دوستی",
+                status: "فعال"
+            },
+            { 
+                region: "منطقه 5", 
+                name: "بوستان مهربانو دو", 
+                address: "خیابان سپاه جنوبی نبش کوچه 8",
+                status: "فعال"
+            },
+            { 
+                region: "منطقه 6", 
+                name: "باغ مهربانو", 
+                address: "باغ خانواده سلامت بانوان - چمران پیاده راه سلامت",
+                status: "فعال"
+            },
+            { 
+                region: "منطقه 7", 
+                name: "باغ بانوان مهربانو", 
+                address: "واقع در ضلع شمال غربی پارک شهروند",
+                status: "فعال"
+            },
+            { 
+                region: "منطقه 9", 
+                name: "باغ بانوان (باغ مادر و کودک)", 
+                address: "بلوار طلائیه، روبروی شهدای احمد آباد",
+                status: "فعال"
+            },
+            { 
+                region: "منطقه 10", 
+                name: "باغ بانوان مهر بانو", 
+                address: "بخشی از باغ مرکز گل و گیاه گویم (در حال احداث)",
+                status: "در حال احداث"
+            },
+            { 
+                region: "منطقه 11", 
+                name: "باغ مهربانو", 
+                address: "خیابان سهراب سپهری",
+                status: "فعال"
+            }
+        ];
+
+        // متغیرهای جهانی برای نمودارها
+        let gardensByRegionChart, gardensDistributionChart, statusChart, mapChart;
+        let selectedRegion = "all";
+
+        // پر کردن dropdown مناطق
+        function populateRegionSelector() {
+            const selector = document.getElementById('regionSelect');
+            
+            // استخراج مناطق منحصر به فرد
+            const uniqueRegions = [...new Set(gardensData.map(item => item.region))];
+            
+            uniqueRegions.forEach(region => {
+                const option = document.createElement('option');
+                option.value = region;
+                option.textContent = region;
+                selector.appendChild(option);
+            });
+        }
+
+        // پر کردن لیست باغ‌ها
+        function populateGardensList() {
+            const gardensList = document.getElementById('gardensList');
+            gardensList.innerHTML = '';
+            
+            let filteredData = gardensData;
+            if (selectedRegion !== "all") {
+                filteredData = gardensData.filter(item => item.region === selectedRegion);
+            }
+            
+            filteredData.forEach(garden => {
+                const gardenItem = document.createElement('div');
+                gardenItem.className = 'garden-item';
+                
+                gardenItem.innerHTML = `
+                    <div class="garden-name">${garden.name}</div>
+                    <div class="garden-region">منطقه: ${garden.region}</div>
+                    <div class="garden-address">آدرس: ${garden.address}</div>
+                    <div class="garden-status">وضعیت: <span class="highlight">${garden.status}</span></div>
+                `;
+                
+                gardensList.appendChild(gardenItem);
+            });
+        }
+
+        // نمودار تعداد باغ‌ها در هر منطقه
+        function createGardensByRegionChart() {
+            const ctx = document.getElementById('gardensByRegionChart').getContext('2d');
+            
+            let labels, data;
+            if (selectedRegion === "all") {
+                // گروه‌بندی داده‌ها بر اساس منطقه
+                const regionGroups = {};
+                gardensData.forEach(item => {
+                    if (!regionGroups[item.region]) {
+                        regionGroups[item.region] = 0;
+                    }
+                    regionGroups[item.region] += 1;
+                });
+                
+                labels = Object.keys(regionGroups);
+                data = Object.values(regionGroups);
+            } else {
+                const regionData = gardensData.filter(item => item.region === selectedRegion);
+                labels = ['باغ‌های منطقه ' + selectedRegion];
+                data = [regionData.length];
+            }
+
+            if (gardensByRegionChart) {
+                gardensByRegionChart.destroy();
+            }
+
+            gardensByRegionChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'تعداد باغ‌های بانوان',
+                        data: data,
+                        backgroundColor: 'rgba(156, 39, 176, 0.7)',
+                        borderColor: 'rgba(156, 39, 176, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: selectedRegion === "all" ? 'تعداد باغ‌های بانوان در هر منطقه' : `باغ‌های بانوان در ${selectedRegion}`,
+                            font: { size: 16 }
+                        },
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'تعداد باغ'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // نمودار توزیع باغ‌ها بین مناطق
+        function createGardensDistributionChart() {
+            const ctx = document.getElementById('gardensDistributionChart').getContext('2d');
+            
+            if (selectedRegion === "all") {
+                // گروه‌بندی داده‌ها بر اساس منطقه
+                const regionGroups = {};
+                gardensData.forEach(item => {
+                    if (!regionGroups[item.region]) {
+                        regionGroups[item.region] = 0;
+                    }
+                    regionGroups[item.region] += 1;
+                });
+                
+                const labels = Object.keys(regionGroups);
+                const data = Object.values(regionGroups);
+
+                if (gardensDistributionChart) {
+                    gardensDistributionChart.destroy();
+                }
+
+                const colors = [
+                    'rgba(156, 39, 176, 0.7)',
+                    'rgba(103, 58, 183, 0.7)',
+                    'rgba(63, 81, 181, 0.7)',
+                    'rgba(33, 150, 243, 0.7)',
+                    'rgba(3, 169, 244, 0.7)',
+                    'rgba(0, 188, 212, 0.7)',
+                    'rgba(0, 150, 136, 0.7)'
+                ];
+
+                gardensDistributionChart = new Chart(ctx, {
+                    type: 'pie',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            data: data,
+                            backgroundColor: colors,
+                            borderColor: colors.map(color => color.replace('0.7', '1')),
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'توزیع باغ‌های بانوان بین مناطق',
+                                font: { size: 16 }
+                            },
+                            legend: {
+                                position: 'bottom',
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const value = context.raw;
+                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                        const percentage = ((value / total) * 100).toFixed(1);
+                                        return `${context.label}: ${value} باغ (${percentage}%)`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            } else {
+                const regionData = gardensData.filter(item => item.region === selectedRegion);
+                const statusCounts = {
+                    'فعال': regionData.filter(item => item.status === 'فعال').length,
+                    'در حال احداث': regionData.filter(item => item.status === 'در حال احداث').length
+                };
+
+                if (gardensDistributionChart) {
+                    gardensDistributionChart.destroy();
+                }
+
+                gardensDistributionChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['باغ‌های فعال', 'باغ‌های در حال احداث'],
+                        datasets: [{
+                            data: [statusCounts['فعال'], statusCounts['در حال احداث']],
+                            backgroundColor: [
+                                'rgba(76, 175, 80, 0.7)',
+                                'rgba(255, 152, 0, 0.7)'
+                            ],
+                            borderColor: [
+                                'rgba(76, 175, 80, 1)',
+                                'rgba(255, 152, 0, 1)'
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: `وضعیت باغ‌های بانوان در ${selectedRegion}`,
+                                font: { size: 16 }
+                            },
+                            legend: {
+                                position: 'bottom',
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // نمودار وضعیت احداث باغ‌ها
+        function createStatusChart() {
+            const ctx = document.getElementById('statusChart').getContext('2d');
+            
+            let labels, data;
+            if (selectedRegion === "all") {
+                const statusCounts = {
+                    'فعال': gardensData.filter(item => item.status === 'فعال').length,
+                    'در حال احداث': gardensData.filter(item => item.status === 'در حال احداث').length
+                };
+                
+                labels = ['باغ‌های فعال', 'باغ‌های در حال احداث'];
+                data = [statusCounts['فعال'], statusCounts['در حال احداث']];
+            } else {
+                const regionData = gardensData.filter(item => item.region === selectedRegion);
+                const statusCounts = {
+                    'فعال': regionData.filter(item => item.status === 'فعال').length,
+                    'در حال احداث': regionData.filter(item => item.status === 'در حال احداث').length
+                };
+                
+                labels = ['باغ‌های فعال', 'باغ‌های در حال احداث'];
+                data = [statusCounts['فعال'], statusCounts['در حال احداث']];
+            }
+
+            if (statusChart) {
+                statusChart.destroy();
+            }
+
+            statusChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'تعداد باغ‌ها',
+                        data: data,
+                        backgroundColor: [
+                            'rgba(76, 175, 80, 0.7)',
+                            'rgba(255, 152, 0, 0.7)'
+                        ],
+                        borderColor: [
+                            'rgba(76, 175, 80, 1)',
+                            'rgba(255, 152, 0, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: selectedRegion === "all" ? 'وضعیت احداث باغ‌های بانوان در کل شهر' : `وضعیت احداث باغ‌های بانوان در ${selectedRegion}`,
+                            font: { size: 16 }
+                        },
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'تعداد باغ'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // نمودار پراکندگی جغرافیایی
+        function createMapChart() {
+            const ctx = document.getElementById('mapChart').getContext('2d');
+            
+            // ایجاد داده‌های مصنوعی برای نمایش پراکندگی
+            let labels, data;
+            if (selectedRegion === "all") {
+                // گروه‌بندی داده‌ها بر اساس منطقه
+                const regionGroups = {};
+                gardensData.forEach(item => {
+                    if (!regionGroups[item.region]) {
+                        regionGroups[item.region] = 0;
+                    }
+                    regionGroups[item.region] += 1;
+                });
+                
+                labels = Object.keys(regionGroups);
+                data = Object.values(regionGroups);
+            } else {
+                const regionData = gardensData.filter(item => item.region === selectedRegion);
+                labels = [selectedRegion];
+                data = [regionData.length];
+            }
+
+            if (mapChart) {
+                mapChart.destroy();
+            }
+
+            mapChart = new Chart(ctx, {
+                type: 'polarArea',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'تعداد باغ‌های بانوان',
+                        data: data,
+                        backgroundColor: [
+                            'rgba(156, 39, 176, 0.7)',
+                            'rgba(103, 58, 183, 0.7)',
+                            'rgba(63, 81, 181, 0.7)',
+                            'rgba(33, 150, 243, 0.7)',
+                            'rgba(3, 169, 244, 0.7)',
+                            'rgba(0, 188, 212, 0.7)',
+                            'rgba(0, 150, 136, 0.7)'
+                        ],
+                        borderColor: [
+                            'rgba(156, 39, 176, 1)',
+                            'rgba(103, 58, 183, 1)',
+                            'rgba(63, 81, 181, 1)',
+                            'rgba(33, 150, 243, 1)',
+                            'rgba(3, 169, 244, 1)',
+                            'rgba(0, 188, 212, 1)',
+                            'rgba(0, 150, 136, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: selectedRegion === "all" ? 'پراکندگی باغ‌های بانوان در مناطق شیراز' : `تمرکز باغ‌های بانوان در ${selectedRegion}`,
+                            font: { size: 16 }
+                        },
+                        legend: {
+                            position: 'bottom',
+                        }
+                    }
+                }
+            });
+        }
+
+        // به‌روزرسانی کارت‌های آماری
+        function updateStatsCards() {
+            let totalGardens, regionsWithGardens, maxGardensRegion;
+            
+            if (selectedRegion === "all") {
+                totalGardens = gardensData.length;
+                
+                // استخراج مناطق منحصر به فرد
+                const uniqueRegions = [...new Set(gardensData.map(item => item.region))];
+                regionsWithGardens = uniqueRegions.length;
+                
+                // یافتن منطقه با بیشترین تعداد باغ
+                const regionCounts = {};
+                gardensData.forEach(item => {
+                    if (!regionCounts[item.region]) {
+                        regionCounts[item.region] = 0;
+                    }
+                    regionCounts[item.region] += 1;
+                });
+                
+                let maxCount = 0;
+                for (const region in regionCounts) {
+                    if (regionCounts[region] > maxCount) {
+                        maxCount = regionCounts[region];
+                        maxGardensRegion = region;
+                    }
+                }
+            } else {
+                const regionData = gardensData.filter(item => item.region === selectedRegion);
+                totalGardens = regionData.length;
+                regionsWithGardens = 1;
+                maxGardensRegion = selectedRegion;
+            }
+            
+            document.getElementById('totalGardens').textContent = totalGardens;
+            document.getElementById('regionsWithGardens').textContent = regionsWithGardens;
+            document.getElementById('maxGardensRegion').textContent = maxGardensRegion;
+        }
+
+        // به‌روزرسانی تمام نمودارها و تحلیل
+        function updateAllCharts() {
+            createGardensByRegionChart();
+            createGardensDistributionChart();
+            createStatusChart();
+            createMapChart();
+            updateStatsCards();
+            populateGardensList();
+        }
+
+        // راه‌اندازی تمام توابع پس از بارگذاری صفحه
+        document.addEventListener('DOMContentLoaded', function() {
+            populateRegionSelector();
+            updateAllCharts();
+
+            // افزودن event listener برای تغییر منطقه
+            document.getElementById('regionSelect').addEventListener('change', function() {
+                selectedRegion = this.value;
+                updateAllCharts();
+            });
+        });
+    </script>
+</body>
+</html>
